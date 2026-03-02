@@ -1404,6 +1404,10 @@ function ReportsView() {
   const finishedOrders = orders.filter(o => o.status === 'Finalizado');
 
   const totalFinishedPieces = finishedOrders.reduce((acc, o) => acc + o.quantity, 0);
+  const totalFinishedValue = finishedOrders.reduce((acc, o) => {
+    const product = products.find(p => p.id === o.product_id);
+    return acc + (o.quantity * (product?.unit_cost || 0));
+  }, 0);
   const totalInProductionPieces = activeOrders.filter(o => o.status === 'Em Produção').reduce((acc, o) => acc + o.quantity, 0);
   const totalPlannedPieces = activeOrders.filter(o => o.status === 'Planejado').reduce((acc, o) => acc + o.quantity, 0);
 
@@ -1459,6 +1463,8 @@ function ReportsView() {
                   <th className="pb-4 font-semibold text-slate-600">Cód. Produto</th>
                   <th className="pb-4 font-semibold text-slate-600">Produto</th>
                   <th className="pb-4 font-semibold text-slate-600 text-right">Qtd</th>
+                  <th className="pb-4 font-semibold text-slate-600 text-right">Valor Unit.</th>
+                  <th className="pb-4 font-semibold text-slate-600 text-right">Valor Total</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -1470,12 +1476,14 @@ function ReportsView() {
                       <td className="py-3 font-mono text-indigo-600">{product?.code || '-'}</td>
                       <td className="py-3 text-slate-600">{order.product_name}</td>
                       <td className="py-3 text-right font-bold text-slate-800">{order.quantity}</td>
+                      <td className="py-3 text-right text-slate-600 whitespace-nowrap">R$ {(product?.unit_cost || 0).toFixed(2)}</td>
+                      <td className="py-3 text-right font-bold text-emerald-600 whitespace-nowrap">R$ {((product?.unit_cost || 0) * order.quantity).toFixed(2)}</td>
                     </tr>
                   );
                 })}
                 {finishedOrders.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="py-8 text-center text-slate-400 italic">Nenhuma ordem finalizada</td>
+                    <td colSpan={6} className="py-8 text-center text-slate-400 italic">Nenhuma ordem finalizada</td>
                   </tr>
                 )}
               </tbody>
@@ -1483,7 +1491,8 @@ function ReportsView() {
                 <tfoot>
                   <tr className="border-t border-slate-100 bg-slate-50/50">
                     <td colSpan={3} className="py-3 font-bold text-slate-600 text-right">TOTAL FINALIZADO:</td>
-                    <td className="py-3 text-right font-bold text-emerald-600">{totalFinishedPieces}</td>
+                    <td className="py-3 text-right font-bold text-slate-800">{totalFinishedPieces} <span className="text-xs text-slate-500 font-normal">pçs</span></td>
+                    <td colSpan={2} className="py-3 text-right font-bold text-emerald-600 whitespace-nowrap border-l border-slate-200">R$ {totalFinishedValue.toFixed(2)}</td>
                   </tr>
                 </tfoot>
               )}
