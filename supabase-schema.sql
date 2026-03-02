@@ -97,13 +97,28 @@ alter table production_orders enable row level security;
 alter table production_logs enable row level security;
 
 -- Políticas de Acesso
-create policy "Acesso proprietario company_info" on company_info for all to authenticated using (auth.uid() = user_id);
-create policy "Acesso proprietario user_profile" on user_profile for all to authenticated using (auth.uid() = user_id);
-create policy "Acesso proprietario supplies" on supplies for all to authenticated using (auth.uid() = user_id);
-create policy "Acesso proprietario products" on products for all to authenticated using (auth.uid() = user_id);
-create policy "Acesso proprietario operations" on operations for all to authenticated using (auth.uid() = user_id);
-create policy "Acesso proprietario team" on team for all to authenticated using (auth.uid() = user_id);
-create policy "Acesso proprietario production_orders" on production_orders for all to authenticated using (auth.uid() = user_id);
-create policy "Acesso proprietario production_logs" on production_logs for all to authenticated using (auth.uid() = user_id);
+drop policy if exists "Acesso proprietario company_info" on company_info;
+create policy "Acesso proprietario company_info" on company_info for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "Acesso proprietario user_profile" on user_profile;
+create policy "Acesso proprietario user_profile" on user_profile for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "Acesso proprietario supplies" on supplies;
+create policy "Acesso proprietario supplies" on supplies for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "Acesso proprietario products" on products;
+create policy "Acesso proprietario products" on products for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "Acesso proprietario operations" on operations;
+create policy "Acesso proprietario operations" on operations for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "Acesso proprietario team" on team;
+create policy "Acesso proprietario team" on team for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "Acesso proprietario production_orders" on production_orders;
+create policy "Acesso proprietario production_orders" on production_orders for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "Acesso proprietario production_logs" on production_logs;
+create policy "Acesso proprietario production_logs" on production_logs for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- FIM! 🚀 Sua base de dados está pronta para ser usada pela Vercel.
