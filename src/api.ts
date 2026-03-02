@@ -3,6 +3,7 @@ import { supabase } from './supabase';
 export const apiFetch = async (url: string, options: any = {}) => {
     const method = options.method || 'GET';
     const body = options.body ? JSON.parse(options.body) : null;
+    if (body && 'id' in body) delete body.id;
 
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
