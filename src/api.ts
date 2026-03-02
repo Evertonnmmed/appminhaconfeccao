@@ -48,21 +48,23 @@ export const apiFetch = async (url: string, options: any = {}) => {
 
         // --- SETTINGS ---
         if (url === '/api/settings' && method === 'GET') {
-            let { data: company, error: ce } = await supabase.from('company_info').select('*').single();
-            let { data: user, error: ue } = await supabase.from('user_profile').select('*').single();
+            let { data: compData, error: ce } = await supabase.from('company_info').select('*').eq('user_id', userId).limit(1);
+            let { data: userData, error: ue } = await supabase.from('user_profile').select('*').eq('user_id', userId).limit(1);
 
-            // If no company exists yet, ignoring single() error which is usually PGRST116 (0 rows)
+            let company = compData && compData.length > 0 ? compData[0] : null;
+            let user = userData && userData.length > 0 ? userData[0] : null;
+
             if (!company) {
                 const { error: insC } = await supabase.from('company_info').insert({ user_id: userId, name: 'Minha Confecção' });
                 if (insC) return errorResponse(insC);
-                const res = await supabase.from('company_info').select('*').single();
-                company = res.data;
+                const res = await supabase.from('company_info').select('*').eq('user_id', userId).limit(1);
+                company = res.data?.[0];
             }
             if (!user) {
                 const { error: insU } = await supabase.from('user_profile').insert({ user_id: userId, name: 'Administrador', role: 'Gerente' });
                 if (insU) return errorResponse(insU);
-                const res = await supabase.from('user_profile').select('*').single();
-                user = res.data;
+                const res = await supabase.from('user_profile').select('*').eq('user_id', userId).limit(1);
+                user = res.data?.[0];
             }
             return jsonResponse({ company, user });
         }
