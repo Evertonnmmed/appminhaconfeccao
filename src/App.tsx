@@ -44,8 +44,8 @@ const SidebarItem = ({ icon: Icon, label, active, collapsed, onClick }: { icon: 
   <button
     onClick={onClick}
     className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative ${active
-        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-        : 'text-slate-500 hover:bg-slate-100'
+      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
+      : 'text-slate-500 hover:bg-slate-100'
       }`}
   >
     <Icon size={20} className="shrink-0" />
@@ -252,7 +252,6 @@ export default function App() {
       case 'operacoes': return <OperationsView onUpdate={fetchData} />;
       case 'equipe': return <TeamView onUpdate={fetchData} />;
       case 'ordens': return <OrdersView onUpdate={fetchData} />;
-      case 'fabrica': return <ShopFloorView onUpdate={fetchData} />;
       case 'relatorios': return <ReportsView />;
       case 'configuracoes': return <SettingsView company={company} user={user} onUpdate={fetchData} />;
       default: return <DashboardView dashboard={dashboard} user={user} onUpdate={fetchData} />;
@@ -301,7 +300,6 @@ export default function App() {
           <SidebarItem icon={Settings2} label="Cadastro de OPs" active={activeTab === 'operacoes'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('operacoes'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
           <SidebarItem icon={Users} label="Equipe" active={activeTab === 'equipe'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('equipe'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
           <SidebarItem icon={ClipboardList} label="Ordens de Produção" active={activeTab === 'ordens'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('ordens'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
-          <SidebarItem icon={Factory} label="Chão de Fábrica" active={activeTab === 'fabrica'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('fabrica'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
           <SidebarItem icon={History} label="Relatórios" active={activeTab === 'relatorios'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('relatorios'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
         </nav>
 
