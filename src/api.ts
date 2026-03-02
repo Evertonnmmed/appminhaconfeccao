@@ -3,7 +3,17 @@ import { supabase } from './supabase';
 export const apiFetch = async (url: string, options: any = {}) => {
     const method = options.method || 'GET';
     const body = options.body ? JSON.parse(options.body) : null;
-    if (body && 'id' in body) delete body.id;
+    if (body) {
+        if ('id' in body) delete body.id;
+        // Strip computed frontend properties to avoid "column not found" on INSERT/UPDATE
+        delete body.product_name;
+        delete body.operator_name;
+        delete body.operation_name;
+        delete body.order_code;
+        delete body.products;
+        delete body.team_members;
+        delete body.operations;
+    }
 
     const { data: { session } } = await supabase.auth.getSession();
     const userId = session?.user?.id;
