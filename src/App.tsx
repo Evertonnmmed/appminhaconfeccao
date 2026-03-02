@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingCart, 
-  Users, 
-  ClipboardList, 
-  Settings, 
-  Factory, 
+import { apiFetch } from './api';
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Users,
+  ClipboardList,
+  Settings,
+  Factory,
   History,
   Menu,
   X,
@@ -25,16 +26,16 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from './supabase';
-import { 
-  DashboardData, 
-  CompanyInfo, 
-  UserProfile, 
-  Supply, 
-  Product, 
-  Operation, 
-  TeamMember, 
-  ProductionOrder, 
-  ProductionLog 
+import {
+  DashboardData,
+  CompanyInfo,
+  UserProfile,
+  Supply,
+  Product,
+  Operation,
+  TeamMember,
+  ProductionOrder,
+  ProductionLog
 } from './types';
 
 // --- Components ---
@@ -42,11 +43,10 @@ import {
 const SidebarItem = ({ icon: Icon, label, active, collapsed, onClick }: { icon: any, label: string, active: boolean, collapsed: boolean, onClick: () => void }) => (
   <button
     onClick={onClick}
-    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative ${
-      active 
-        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
+    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative ${active
+        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
         : 'text-slate-500 hover:bg-slate-100'
-    }`}
+      }`}
   >
     <Icon size={20} className="shrink-0" />
     <span className={`font-medium whitespace-nowrap transition-all duration-300 overflow-hidden ${collapsed ? 'w-0 opacity-0' : 'w-full opacity-100'}`}>
@@ -119,7 +119,7 @@ function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md bg-white rounded-3xl p-8 shadow-xl border border-slate-100"
@@ -142,8 +142,8 @@ function Login() {
             <label className="block text-xs font-bold text-slate-400 uppercase mb-1 ml-1">E-mail</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input 
-                type="email" 
+              <input
+                type="email"
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
@@ -156,8 +156,8 @@ function Login() {
             <label className="block text-xs font-bold text-slate-400 uppercase mb-1 ml-1">Senha</label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input 
-                type="password" 
+              <input
+                type="password"
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -166,9 +166,9 @@ function Login() {
               />
             </div>
           </div>
-          <button 
+          <button
             disabled={loading}
-            type="submit" 
+            type="submit"
             className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 disabled:opacity-50"
           >
             {loading ? 'Processando...' : (isSignUp ? 'Criar Conta' : 'Entrar')}
@@ -176,7 +176,7 @@ function Login() {
         </form>
 
         <div className="mt-6 text-center">
-          <button 
+          <button
             onClick={() => setIsSignUp(!isSignUp)}
             className="text-sm text-slate-500 hover:text-indigo-600 transition-colors"
           >
@@ -190,19 +190,6 @@ function Login() {
 
 // --- Main App ---
 
-let currentUserId = 'default_user';
-
-const apiFetch = (url: string, options: any = {}) => {
-  return fetch(url, {
-    ...options,
-    headers: {
-      ...options.headers,
-      'Content-Type': 'application/json',
-      'x-user-id': currentUserId
-    }
-  });
-};
-
 export default function App() {
   const [session, setSession] = useState<any>(null);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -214,12 +201,10 @@ export default function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      currentUserId = session?.user?.id || 'default_user';
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      currentUserId = session?.user?.id || 'default_user';
     });
 
     return () => subscription.unsubscribe();
@@ -290,7 +275,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Sidebar */}
-      <aside 
+      <aside
         className={`fixed inset-y-0 left-0 z-40 bg-white border-r border-slate-100 transition-all duration-300 flex flex-col h-full
           ${isSidebarOpen ? 'w-64 translate-x-0' : 'w-64 -translate-x-full lg:w-20 lg:translate-x-0'}
         `}
@@ -310,19 +295,19 @@ export default function App() {
         </div>
 
         <nav className="flex-1 px-3 space-y-1.5 mt-6 overflow-y-auto custom-scrollbar">
-          <SidebarItem icon={LayoutDashboard} label="Dashboard" active={activeTab === 'dashboard'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('dashboard'); if(window.innerWidth < 1024) setIsSidebarOpen(false); }} />
-          <SidebarItem icon={ShoppingCart} label="Estoque" active={activeTab === 'estoque'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('estoque'); if(window.innerWidth < 1024) setIsSidebarOpen(false); }} />
-          <SidebarItem icon={Package} label="Produtos" active={activeTab === 'produtos'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('produtos'); if(window.innerWidth < 1024) setIsSidebarOpen(false); }} />
-          <SidebarItem icon={Settings2} label="Cadastro de OPs" active={activeTab === 'operacoes'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('operacoes'); if(window.innerWidth < 1024) setIsSidebarOpen(false); }} />
-          <SidebarItem icon={Users} label="Equipe" active={activeTab === 'equipe'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('equipe'); if(window.innerWidth < 1024) setIsSidebarOpen(false); }} />
-          <SidebarItem icon={ClipboardList} label="Ordens de Produção" active={activeTab === 'ordens'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('ordens'); if(window.innerWidth < 1024) setIsSidebarOpen(false); }} />
-          <SidebarItem icon={Factory} label="Chão de Fábrica" active={activeTab === 'fabrica'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('fabrica'); if(window.innerWidth < 1024) setIsSidebarOpen(false); }} />
-          <SidebarItem icon={History} label="Relatórios" active={activeTab === 'relatorios'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('relatorios'); if(window.innerWidth < 1024) setIsSidebarOpen(false); }} />
+          <SidebarItem icon={LayoutDashboard} label="Dashboard" active={activeTab === 'dashboard'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('dashboard'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
+          <SidebarItem icon={ShoppingCart} label="Estoque" active={activeTab === 'estoque'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('estoque'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
+          <SidebarItem icon={Package} label="Produtos" active={activeTab === 'produtos'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('produtos'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
+          <SidebarItem icon={Settings2} label="Cadastro de OPs" active={activeTab === 'operacoes'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('operacoes'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
+          <SidebarItem icon={Users} label="Equipe" active={activeTab === 'equipe'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('equipe'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
+          <SidebarItem icon={ClipboardList} label="Ordens de Produção" active={activeTab === 'ordens'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('ordens'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
+          <SidebarItem icon={Factory} label="Chão de Fábrica" active={activeTab === 'fabrica'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('fabrica'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
+          <SidebarItem icon={History} label="Relatórios" active={activeTab === 'relatorios'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('relatorios'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
         </nav>
 
         <div className="p-3 border-t border-slate-50 space-y-1.5">
-          <SidebarItem icon={Settings} label="Configurações" active={activeTab === 'configuracoes'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('configuracoes'); if(window.innerWidth < 1024) setIsSidebarOpen(false); }} />
-          
+          <SidebarItem icon={Settings} label="Configurações" active={activeTab === 'configuracoes'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('configuracoes'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
+
           <div className={`mt-4 p-3 bg-slate-50 rounded-xl transition-all duration-300 flex items-center gap-3 ${!isSidebarOpen && 'lg:p-1 lg:bg-transparent'}`}>
             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs shrink-0 overflow-hidden border border-white">
               {user?.photo ? <img src={user.photo} alt="User" className="w-full h-full object-cover" /> : user?.name?.charAt(0) || 'U'}
@@ -333,7 +318,7 @@ export default function App() {
             </div>
           </div>
           <div className="p-4 border-t border-slate-100">
-            <button 
+            <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-slate-500 hover:bg-rose-50 hover:text-rose-600 transition-all group"
             >
@@ -350,7 +335,7 @@ export default function App() {
       <main className={`flex-1 transition-all duration-300 min-w-0 ${isSidebarOpen ? 'lg:ml-64' : 'lg:ml-20'}`}>
         <header className="h-16 bg-white border-b border-slate-100 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-20 shadow-sm">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-2 hover:bg-slate-100 rounded-lg text-slate-500"
             >
@@ -404,7 +389,7 @@ function DashboardView({ dashboard, user, onUpdate }: { dashboard: DashboardData
   const [products, setProducts] = useState<Product[]>([]);
   const [operations, setOperations] = useState<Operation[]>([]);
   const [team, setTeam] = useState<TeamMember[]>([]);
-  
+
   const [editingOrder, setEditingOrder] = useState<ProductionOrder | null>(null);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [editingSupply, setEditingSupply] = useState<Supply | null>(null);
@@ -452,8 +437,8 @@ function DashboardView({ dashboard, user, onUpdate }: { dashboard: DashboardData
             <div className="space-y-4">
               {activeOrders.length > 0 ? (
                 activeOrders.map((order) => (
-                  <div 
-                    key={order.id} 
+                  <div
+                    key={order.id}
                     className="p-4 border border-slate-100 rounded-2xl hover:border-indigo-200 hover:bg-indigo-50/30 transition-all cursor-pointer group"
                     onClick={() => { setEditingOrder(order); setIsOrderModalOpen(true); }}
                   >
@@ -480,14 +465,13 @@ function DashboardView({ dashboard, user, onUpdate }: { dashboard: DashboardData
                       </div>
                     </div>
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                      <motion.div 
+                      <motion.div
                         initial={{ width: 0 }}
-                        animate={{ 
-                          width: order.status === 'Finalizado' ? '100%' : order.status === 'Em Produção' ? '65%' : '5%' 
+                        animate={{
+                          width: order.status === 'Finalizado' ? '100%' : order.status === 'Em Produção' ? '65%' : '5%'
                         }}
-                        className={`h-full ${
-                          order.status === 'Finalizado' ? 'bg-emerald-500' : order.status === 'Em Produção' ? 'bg-indigo-500' : 'bg-slate-300'
-                        }`}
+                        className={`h-full ${order.status === 'Finalizado' ? 'bg-emerald-500' : order.status === 'Em Produção' ? 'bg-indigo-500' : 'bg-slate-300'
+                          }`}
                       />
                     </div>
                   </div>
@@ -509,8 +493,8 @@ function DashboardView({ dashboard, user, onUpdate }: { dashboard: DashboardData
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                   {allOrders.slice().reverse().map(order => (
-                    <tr 
-                      key={order.id} 
+                    <tr
+                      key={order.id}
                       className="hover:bg-slate-50 cursor-pointer transition-colors group"
                       onClick={() => { setEditingOrder(order); setIsOrderModalOpen(true); }}
                     >
@@ -537,14 +521,13 @@ function DashboardView({ dashboard, user, onUpdate }: { dashboard: DashboardData
             <div className="space-y-4">
               {recentLogs.length > 0 ? (
                 recentLogs.map((log) => (
-                  <div 
-                    key={log.id} 
+                  <div
+                    key={log.id}
                     className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer group"
                     onClick={() => { setEditingLog(log); setIsLogModalOpen(true); }}
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                      log.status === 'Finalizado' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600'
-                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${log.status === 'Finalizado' ? 'bg-emerald-100 text-emerald-600' : 'bg-indigo-100 text-indigo-600'
+                      }`}>
                       {log.status === 'Finalizado' ? <CheckCircle2 size={18} /> : <Play size={18} />}
                     </div>
                     <div className="flex-1">
@@ -571,8 +554,8 @@ function DashboardView({ dashboard, user, onUpdate }: { dashboard: DashboardData
             <div className="space-y-4">
               {lowStockItems.length > 0 ? (
                 lowStockItems.map((item) => (
-                  <div 
-                    key={item.id} 
+                  <div
+                    key={item.id}
                     className="flex items-center gap-4 p-3 border border-amber-100 bg-amber-50 rounded-xl hover:bg-amber-100 transition-colors cursor-pointer group"
                     onClick={() => { setEditingSupply(item); setIsSupplyModalOpen(true); }}
                   >
@@ -599,32 +582,32 @@ function DashboardView({ dashboard, user, onUpdate }: { dashboard: DashboardData
 
       {isOrderModalOpen && (
         <Modal title="Editar Ordem de Produção" onClose={() => setIsOrderModalOpen(false)}>
-          <OrderForm 
-            order={editingOrder} 
-            products={products} 
+          <OrderForm
+            order={editingOrder}
+            products={products}
             operations={operations}
-            onSuccess={() => { setIsOrderModalOpen(false); refreshData(); onUpdate(); }} 
+            onSuccess={() => { setIsOrderModalOpen(false); refreshData(); onUpdate(); }}
           />
         </Modal>
       )}
 
       {isSupplyModalOpen && (
         <Modal title="Editar Insumo" onClose={() => setIsSupplyModalOpen(false)}>
-          <SupplyForm 
-            item={editingSupply} 
-            onSuccess={() => { setIsSupplyModalOpen(false); refreshData(); onUpdate(); }} 
+          <SupplyForm
+            item={editingSupply}
+            onSuccess={() => { setIsSupplyModalOpen(false); refreshData(); onUpdate(); }}
           />
         </Modal>
       )}
 
       {isLogModalOpen && (
         <Modal title="Editar Apontamento" onClose={() => setIsLogModalOpen(false)}>
-          <LogForm 
+          <LogForm
             log={editingLog}
             orders={allOrders}
             team={team}
             operations={operations}
-            onSuccess={() => { setIsLogModalOpen(false); refreshData(); onUpdate(); }} 
+            onSuccess={() => { setIsLogModalOpen(false); refreshData(); onUpdate(); }}
           />
         </Modal>
       )}
@@ -675,7 +658,7 @@ function InventoryView({ onUpdate }: { onUpdate: () => void }) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl font-bold text-slate-800">Gestão de Estoque</h2>
-        <button 
+        <button
           onClick={() => { setEditingItem(null); setIsModalOpen(true); }}
           className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors"
         >
@@ -707,14 +690,14 @@ function InventoryView({ onUpdate }: { onUpdate: () => void }) {
                     </Badge>
                   </td>
                   <td className="py-4 text-right space-x-2">
-                    <button 
+                    <button
                       onClick={() => { setEditingItem(item); setIsModalOpen(true); }}
                       className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                       title="Editar Insumo"
                     >
                       <Settings2 size={18} />
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleDelete(item.id)}
                       className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                       title="Excluir Insumo"
@@ -730,13 +713,13 @@ function InventoryView({ onUpdate }: { onUpdate: () => void }) {
       </Card>
 
       {isModalOpen && (
-        <Modal 
-          title={editingItem ? "Editar Insumo" : "Novo Insumo"} 
+        <Modal
+          title={editingItem ? "Editar Insumo" : "Novo Insumo"}
           onClose={() => setIsModalOpen(false)}
         >
-          <SupplyForm 
-            item={editingItem} 
-            onSuccess={() => { setIsModalOpen(false); fetchItems(); onUpdate(); }} 
+          <SupplyForm
+            item={editingItem}
+            onSuccess={() => { setIsModalOpen(false); fetchItems(); onUpdate(); }}
           />
         </Modal>
       )}
@@ -764,7 +747,7 @@ function ProductsView({ onUpdate }: { onUpdate: () => void }) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl font-bold text-slate-800">Catálogo de Produtos</h2>
-        <button 
+        <button
           onClick={() => { setEditingProduct(null); setIsModalOpen(true); }}
           className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors"
         >
@@ -788,13 +771,13 @@ function ProductsView({ onUpdate }: { onUpdate: () => void }) {
                     </div>
                   )}
                   <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button 
+                    <button
                       onClick={() => { setEditingProduct(product); setIsModalOpen(true); }}
                       className="p-2 bg-white/90 backdrop-blur-sm text-slate-600 hover:text-indigo-600 rounded-lg shadow-sm"
                     >
                       <Settings2 size={16} />
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleDelete(product.id)}
                       className="p-2 bg-white/90 backdrop-blur-sm text-slate-600 hover:text-rose-600 rounded-lg shadow-sm"
                     >
@@ -828,13 +811,13 @@ function ProductsView({ onUpdate }: { onUpdate: () => void }) {
       </div>
 
       {isModalOpen && (
-        <Modal 
-          title={editingProduct ? "Editar Produto" : "Novo Produto"} 
+        <Modal
+          title={editingProduct ? "Editar Produto" : "Novo Produto"}
           onClose={() => setIsModalOpen(false)}
         >
-          <ProductForm 
-            product={editingProduct} 
-            onSuccess={() => { setIsModalOpen(false); fetchProducts(); onUpdate(); }} 
+          <ProductForm
+            product={editingProduct}
+            onSuccess={() => { setIsModalOpen(false); fetchProducts(); onUpdate(); }}
           />
         </Modal>
       )}
@@ -862,7 +845,7 @@ function OperationsView({ onUpdate }: { onUpdate: () => void }) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-slate-800">CADASTRO DE OPs</h2>
-        <button 
+        <button
           onClick={() => { setEditingOp(null); setIsModalOpen(true); }}
           className="bg-indigo-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-indigo-700 transition-colors"
         >
@@ -892,13 +875,13 @@ function OperationsView({ onUpdate }: { onUpdate: () => void }) {
                     </Badge>
                   </td>
                   <td className="py-4 text-right space-x-2">
-                    <button 
+                    <button
                       onClick={() => { setEditingOp(op); setIsModalOpen(true); }}
                       className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg"
                     >
                       <Settings2 size={18} />
                     </button>
-                    <button 
+                    <button
                       onClick={() => handleDelete(op.id)}
                       className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
                     >
@@ -913,13 +896,13 @@ function OperationsView({ onUpdate }: { onUpdate: () => void }) {
       </Card>
 
       {isModalOpen && (
-        <Modal 
-          title={editingOp ? "Editar Operação" : "Nova Operação"} 
+        <Modal
+          title={editingOp ? "Editar Operação" : "Nova Operação"}
           onClose={() => setIsModalOpen(false)}
         >
-          <OperationForm 
-            op={editingOp} 
-            onSuccess={() => { setIsModalOpen(false); fetchOps(); onUpdate(); }} 
+          <OperationForm
+            op={editingOp}
+            onSuccess={() => { setIsModalOpen(false); fetchOps(); onUpdate(); }}
           />
         </Modal>
       )}
@@ -947,7 +930,7 @@ function TeamView({ onUpdate }: { onUpdate: () => void }) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl font-bold text-slate-800">Gestão da Equipe</h2>
-        <button 
+        <button
           onClick={() => { setEditingMember(null); setIsModalOpen(true); }}
           className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100"
         >
@@ -970,13 +953,13 @@ function TeamView({ onUpdate }: { onUpdate: () => void }) {
                 <h3 className="font-bold text-slate-800">{member.name}</h3>
                 <p className="text-sm text-slate-500 mb-4">{member.role}</p>
                 <div className="flex gap-2 w-full pt-4 border-t border-slate-50">
-                  <button 
+                  <button
                     onClick={() => { setEditingMember(member); setIsModalOpen(true); }}
                     className="flex-1 py-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors flex items-center justify-center gap-2"
                   >
                     <Settings2 size={16} /> Editar
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDelete(member.id)}
                     className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                   >
@@ -990,13 +973,13 @@ function TeamView({ onUpdate }: { onUpdate: () => void }) {
       </div>
 
       {isModalOpen && (
-        <Modal 
-          title={editingMember ? "Editar Colaborador" : "Novo Colaborador"} 
+        <Modal
+          title={editingMember ? "Editar Colaborador" : "Novo Colaborador"}
           onClose={() => setIsModalOpen(false)}
         >
-          <TeamForm 
-            member={editingMember} 
-            onSuccess={() => { setIsModalOpen(false); fetchMembers(); onUpdate(); }} 
+          <TeamForm
+            member={editingMember}
+            onSuccess={() => { setIsModalOpen(false); fetchMembers(); onUpdate(); }}
           />
         </Modal>
       )}
@@ -1011,7 +994,7 @@ function OrdersView({ onUpdate }: { onUpdate: () => void }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<ProductionOrder | null>(null);
 
-  useEffect(() => { 
+  useEffect(() => {
     fetchOrders();
     apiFetch('/api/products').then(res => res.json()).then(setProducts);
     apiFetch('/api/operations').then(res => res.json()).then(setOperations);
@@ -1040,7 +1023,7 @@ function OrdersView({ onUpdate }: { onUpdate: () => void }) {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl font-bold text-slate-800">Ordens de Produção</h2>
-        <button 
+        <button
           onClick={() => { setEditingOrder(null); setIsModalOpen(true); }}
           className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors"
         >
@@ -1061,13 +1044,13 @@ function OrdersView({ onUpdate }: { onUpdate: () => void }) {
                     <div className="flex justify-between items-start mb-2">
                       <h4 className="font-bold text-slate-800">OP #{order.code || order.id}</h4>
                       <div className="flex gap-1">
-                        <button 
+                        <button
                           onClick={() => { setEditingOrder(order); setIsModalOpen(true); }}
                           className="p-1 text-slate-400 hover:text-indigo-600"
                         >
                           <Settings2 size={14} />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDelete(order.id)}
                           className="p-1 text-slate-400 hover:text-rose-600"
                         >
@@ -1095,7 +1078,7 @@ function OrdersView({ onUpdate }: { onUpdate: () => void }) {
                       </div>
                     </div>
                     {status !== 'Finalizado' && (
-                      <button 
+                      <button
                         onClick={async () => {
                           const nextStatus = status === 'Planejado' ? 'Em Produção' : 'Finalizado';
                           await apiFetch(`/api/orders/${order.id}/status`, {
@@ -1121,15 +1104,15 @@ function OrdersView({ onUpdate }: { onUpdate: () => void }) {
       </div>
 
       {isModalOpen && (
-        <Modal 
-          title={editingOrder ? "Editar Ordem" : "Nova Ordem de Produção"} 
+        <Modal
+          title={editingOrder ? "Editar Ordem" : "Nova Ordem de Produção"}
           onClose={() => setIsModalOpen(false)}
         >
-          <OrderForm 
-            order={editingOrder} 
+          <OrderForm
+            order={editingOrder}
             products={products}
             operations={operations}
-            onSuccess={() => { setIsModalOpen(false); fetchOrders(); onUpdate(); }} 
+            onSuccess={() => { setIsModalOpen(false); fetchOrders(); onUpdate(); }}
           />
         </Modal>
       )}
@@ -1142,7 +1125,7 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [ops, setOps] = useState<Operation[]>([]);
   const [logs, setLogs] = useState<ProductionLog[]>([]);
-  
+
   const [selectedOrder, setSelectedOrder] = useState('');
   const [selectedOperator, setSelectedOperator] = useState('');
 
@@ -1206,7 +1189,7 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
             <form onSubmit={handleAddToQueue} className="flex flex-col sm:flex-row items-stretch sm:items-end gap-4">
               <div className="flex-1">
                 <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Operador</label>
-                <select 
+                <select
                   required
                   value={selectedOperator}
                   onChange={e => setSelectedOperator(e.target.value)}
@@ -1218,7 +1201,7 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
               </div>
               <div className="flex-1">
                 <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">OP</label>
-                <select 
+                <select
                   required
                   value={selectedOrder}
                   onChange={e => setSelectedOrder(e.target.value)}
@@ -1228,7 +1211,7 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
                   {orders.map(o => <option key={o.id} value={o.id}>#{o.code || o.id} - {o.product_name}</option>)}
                 </select>
               </div>
-              <button 
+              <button
                 type="submit"
                 className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
               >
@@ -1246,10 +1229,10 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
               {col.title}
               <span className="bg-white/50 px-2 py-0.5 rounded-full">{logs.filter(l => l.status === col.id).length}</span>
             </div>
-            
+
             <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto pr-2 custom-scrollbar">
               {logs.filter(l => l.status === col.id).map(log => (
-                <motion.div 
+                <motion.div
                   layout
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -1265,7 +1248,7 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
                         {col.id}
                       </Badge>
                     </div>
-                    
+
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2 text-xs text-slate-500">
                         <Users size={12} />
@@ -1279,7 +1262,7 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
 
                     {col.id === 'Aguardando' && (
                       <div className="grid grid-cols-2 gap-2">
-                        <button 
+                        <button
                           onClick={async () => {
                             if (confirm('Remover este apontamento da fila?')) {
                               await apiFetch(`/api/production-logs/${log.id}`, { method: 'DELETE' });
@@ -1291,7 +1274,7 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
                         >
                           <Trash2 size={14} /> Excluir
                         </button>
-                        <button 
+                        <button
                           onClick={() => updateStatus(log.id, 'Em Produção')}
                           className="py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
                         >
@@ -1307,13 +1290,13 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
                           <span>{new Date(log.start_time).toLocaleTimeString()}</span>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
-                          <button 
+                          <button
                             onClick={() => updateStatus(log.id, 'Aguardando')}
                             className="py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
                           >
                             Reverter
                           </button>
-                          <button 
+                          <button
                             onClick={() => updateStatus(log.id, 'Finalizado')}
                             className="py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
                           >
@@ -1329,7 +1312,7 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
                           <span>Concluído em</span>
                           <span>{new Date(log.end_time).toLocaleTimeString()}</span>
                         </div>
-                        <button 
+                        <button
                           onClick={() => updateStatus(log.id, 'Em Produção')}
                           className="w-full py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
                         >
@@ -1340,7 +1323,7 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
                   </Card>
                 </motion.div>
               ))}
-              
+
               {logs.filter(l => l.status === col.id).length === 0 && (
                 <div className="text-center py-12 border-2 border-dashed border-slate-100 rounded-3xl text-slate-300">
                   <p className="text-sm">Vazio</p>
@@ -1413,7 +1396,7 @@ function ReportsView() {
           </div>
         </Card>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card title="Peças Produzidas (Finalizadas)">
           <div className="overflow-x-auto">
@@ -1477,7 +1460,7 @@ function ReportsView() {
                     </td>
                     <td className="py-3 text-right">
                       <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className={`h-full transition-all duration-500 ${order.status === 'Em Produção' ? 'bg-indigo-500 w-1/2' : 'bg-slate-300 w-0'}`}
                         />
                       </div>
@@ -1666,7 +1649,7 @@ function SettingsView({ company, user, onUpdate }: { company: CompanyInfo | null
 function Modal({ title, children, onClose }: { title: string, children: React.ReactNode, onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-      <motion.div 
+      <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl"
@@ -1687,7 +1670,7 @@ function Input({ label, value, onChange, type = 'text', required = false }: { la
   return (
     <div>
       <label className="block text-xs font-bold text-slate-400 uppercase mb-1">{label}</label>
-      <input 
+      <input
         type={type}
         required={required}
         value={value}
@@ -1718,8 +1701,8 @@ function SupplyForm({ item, onSuccess }: { item: Supply | null, onSuccess: () =>
         <Input label="Quantidade" type="number" value={form.quantity} onChange={v => setForm({ ...form, quantity: Number(v) })} required />
         <div>
           <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Unidade</label>
-          <select 
-            value={form.unit} 
+          <select
+            value={form.unit}
             onChange={e => setForm({ ...form, unit: e.target.value })}
             className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
           >
@@ -1740,7 +1723,7 @@ function SupplyForm({ item, onSuccess }: { item: Supply | null, onSuccess: () =>
 
 function ProductForm({ product, onSuccess }: { product: Product | null, onSuccess: () => void }) {
   const [form, setForm] = useState(product || { code: '', name: '', description: '', unit_cost: 0, color: '', photo: '' });
-  
+
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -1789,9 +1772,9 @@ function ProductForm({ product, onSuccess }: { product: Product | null, onSucces
                   <div className="p-2 bg-white text-slate-800 rounded-lg shadow-lg">
                     <Settings2 size={16} />
                   </div>
-                  <button 
+                  <button
                     type="button"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setForm({...form, photo: ''}); }}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setForm({ ...form, photo: '' }); }}
                     className="p-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors shadow-lg"
                   >
                     <Trash2 size={16} />
@@ -1839,8 +1822,8 @@ function OperationForm({ op, onSuccess }: { op: Operation | null, onSuccess: () 
       <Input label="Descrição" value={form.description} onChange={v => setForm({ ...form, description: v })} required />
       <div>
         <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Status</label>
-        <select 
-          value={form.status} 
+        <select
+          value={form.status}
           onChange={e => setForm({ ...form, status: e.target.value })}
           className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
         >
@@ -1858,7 +1841,7 @@ function OperationForm({ op, onSuccess }: { op: Operation | null, onSuccess: () 
 
 function TeamForm({ member, onSuccess }: { member: TeamMember | null, onSuccess: () => void }) {
   const [form, setForm] = useState(member || { name: '', role: '', avatar: '' });
-  
+
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -1906,12 +1889,12 @@ function TeamForm({ member, onSuccess }: { member: TeamMember | null, onSuccess:
 }
 
 function OrderForm({ order, products, operations, onSuccess }: { order: ProductionOrder | null, products: Product[], operations: Operation[], onSuccess: () => void }) {
-  const [form, setForm] = useState(order || { 
+  const [form, setForm] = useState(order || {
     code: '',
-    product_id: products[0]?.id || 0, 
-    quantity: 0, 
-    entry_date: new Date().toISOString().split('T')[0], 
-    delivery_date: '', 
+    product_id: products[0]?.id || 0,
+    quantity: 0,
+    entry_date: new Date().toISOString().split('T')[0],
+    delivery_date: '',
     priority: 'Média',
     status: 'Planejado'
   });
@@ -1938,7 +1921,7 @@ function OrderForm({ order, products, operations, onSuccess }: { order: Producti
         <Input label="Número da OP (Manual)" value={form.code} onChange={v => setForm({ ...form, code: v })} required />
         <div>
           <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Chamar OP Cadastrada</label>
-          <select 
+          <select
             onChange={e => handleOpSelect(e.target.value)}
             className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
             value={operations.find(op => op.code === form.code)?.code || ''}
@@ -1954,7 +1937,7 @@ function OrderForm({ order, products, operations, onSuccess }: { order: Producti
       </div>
       <div>
         <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Produto</label>
-        <select 
+        <select
           required
           value={form.product_id}
           onChange={e => setForm({ ...form, product_id: Number(e.target.value) })}
@@ -1971,7 +1954,7 @@ function OrderForm({ order, products, operations, onSuccess }: { order: Producti
       </div>
       <div>
         <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Prioridade</label>
-        <select 
+        <select
           value={form.priority}
           onChange={e => setForm({ ...form, priority: e.target.value as any })}
           className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -1989,7 +1972,7 @@ function OrderForm({ order, products, operations, onSuccess }: { order: Producti
 }
 
 function LogForm({ log, orders, team, operations, onSuccess }: { log: ProductionLog | null, orders: ProductionOrder[], team: TeamMember[], operations: Operation[], onSuccess: () => void }) {
-  const [form, setForm] = useState(log || { 
+  const [form, setForm] = useState(log || {
     order_id: orders[0]?.id || 0,
     operator_id: team[0]?.id || 0,
     operation_id: operations[0]?.id || 0,
@@ -2022,7 +2005,7 @@ function LogForm({ log, orders, team, operations, onSuccess }: { log: Production
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Ordem de Produção</label>
-        <select 
+        <select
           required
           value={form.order_id}
           onChange={e => setForm({ ...form, order_id: Number(e.target.value) })}
@@ -2033,7 +2016,7 @@ function LogForm({ log, orders, team, operations, onSuccess }: { log: Production
       </div>
       <div>
         <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Operador</label>
-        <select 
+        <select
           required
           value={form.operator_id}
           onChange={e => setForm({ ...form, operator_id: Number(e.target.value) })}
@@ -2044,7 +2027,7 @@ function LogForm({ log, orders, team, operations, onSuccess }: { log: Production
       </div>
       <div>
         <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Operação</label>
-        <select 
+        <select
           required
           value={form.operation_id}
           onChange={e => setForm({ ...form, operation_id: Number(e.target.value) })}
@@ -2055,7 +2038,7 @@ function LogForm({ log, orders, team, operations, onSuccess }: { log: Production
       </div>
       <div>
         <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Status</label>
-        <select 
+        <select
           value={form.status}
           onChange={e => setForm({ ...form, status: e.target.value })}
           className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
@@ -2071,8 +2054,8 @@ function LogForm({ log, orders, team, operations, onSuccess }: { log: Production
       </div>
       <div className="flex gap-4 pt-4">
         {log && (
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={handleDelete}
             className="px-6 py-3 border border-rose-200 text-rose-600 rounded-xl font-bold hover:bg-rose-50 transition-colors"
           >
