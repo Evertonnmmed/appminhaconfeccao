@@ -249,7 +249,6 @@ export default function App() {
       case 'dashboard': return <DashboardView dashboard={dashboard} user={user} onUpdate={fetchData} />;
       case 'estoque': return <InventoryView onUpdate={fetchData} />;
       case 'produtos': return <ProductsView onUpdate={fetchData} />;
-      case 'operacoes': return <OperationsView onUpdate={fetchData} />;
       case 'equipe': return <TeamView onUpdate={fetchData} />;
       case 'ordens': return <OrdersView onUpdate={fetchData} />;
       case 'relatorios': return <ReportsView />;
@@ -297,7 +296,6 @@ export default function App() {
           <SidebarItem icon={LayoutDashboard} label="Dashboard" active={activeTab === 'dashboard'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('dashboard'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
           <SidebarItem icon={ShoppingCart} label="Estoque" active={activeTab === 'estoque'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('estoque'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
           <SidebarItem icon={Package} label="Produtos" active={activeTab === 'produtos'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('produtos'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
-          <SidebarItem icon={Settings2} label="Cadastro de OPs" active={activeTab === 'operacoes'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('operacoes'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
           <SidebarItem icon={Users} label="Equipe" active={activeTab === 'equipe'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('equipe'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
           <SidebarItem icon={ClipboardList} label="Ordens de Produção" active={activeTab === 'ordens'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('ordens'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
           <SidebarItem icon={History} label="Relatórios" active={activeTab === 'relatorios'} collapsed={!isSidebarOpen} onClick={() => { setActiveTab('relatorios'); if (window.innerWidth < 1024) setIsSidebarOpen(false); }} />
@@ -583,7 +581,6 @@ function DashboardView({ dashboard, user, onUpdate }: { dashboard: DashboardData
           <OrderForm
             order={editingOrder}
             products={products}
-            operations={operations}
             onSuccess={() => { setIsOrderModalOpen(false); refreshData(); onUpdate(); }}
           />
         </Modal>
@@ -1167,7 +1164,6 @@ function OrdersView({ onUpdate }: { onUpdate: () => void }) {
           <OrderForm
             order={editingOrder}
             products={products}
-            operations={operations}
             onSuccess={() => { setIsModalOpen(false); fetchOrders(); onUpdate(); }}
           />
         </Modal>
@@ -1944,7 +1940,7 @@ function TeamForm({ member, onSuccess }: { member: TeamMember | null, onSuccess:
   );
 }
 
-function OrderForm({ order, products, operations, onSuccess }: { order: ProductionOrder | null, products: Product[], operations: Operation[], onSuccess: () => void }) {
+function OrderForm({ order, products, onSuccess }: { order: ProductionOrder | null, products: Product[], onSuccess: () => void }) {
   const [form, setForm] = useState(order || {
     code: '',
     product_id: products[0]?.id || 0,
@@ -1954,10 +1950,6 @@ function OrderForm({ order, products, operations, onSuccess }: { order: Producti
     priority: 'Média',
     status: 'Planejado'
   });
-
-  const handleOpSelect = (opCode: string) => {
-    setForm({ ...form, code: opCode });
-  };
 
   const selectedProduct = products.find(p => p.id === form.product_id);
 
@@ -1975,24 +1967,7 @@ function OrderForm({ order, products, operations, onSuccess }: { order: Producti
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Input label="Número da OP (Manual)" value={form.code} onChange={v => setForm({ ...form, code: v })} required />
-        <div>
-          <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Chamar OP Cadastrada</label>
-          <select
-            onChange={e => handleOpSelect(e.target.value)}
-            className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
-            value={operations.find(op => op.code === form.code)?.code || ''}
-          >
-            <option value="">Selecionar OP Cadastrada</option>
-            {operations.map(op => (
-              <option key={op.id} value={op.code}>
-                {op.code} - {op.description}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <Input label="Número da OP" value={form.code} onChange={v => setForm({ ...form, code: v })} required />
       <div className="flex gap-4 items-end">
         <div className="flex-1">
           <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Produto</label>
