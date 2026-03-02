@@ -1039,8 +1039,25 @@ function OrdersView({ onUpdate }: { onUpdate: () => void }) {
               {orders.filter(o => o.status === status).map(order => (
                 <div key={order.id}>
                   <Card>
-                    <div className="flex justify-between items-start mb-2">
-                      <h4 className="font-bold text-slate-800">OP #{order.code || order.id}</h4>
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex gap-3 items-center">
+                        {(() => {
+                          const product = products.find(p => p.id === order.product_id);
+                          return product?.photo ? (
+                            <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 shadow-sm">
+                              <img src={product.photo} alt={product.name} className="w-full h-full object-cover" />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 shadow-sm text-slate-300">
+                              <Package size={20} />
+                            </div>
+                          );
+                        })()}
+                        <div>
+                          <h4 className="font-bold text-slate-800">OP #{order.code || order.id}</h4>
+                          <p className="text-xs font-bold text-indigo-600 uppercase tracking-wider">{order.product_name}</p>
+                        </div>
+                      </div>
                       <div className="flex gap-1">
                         <button
                           onClick={() => { setEditingOrder(order); setIsModalOpen(true); }}
@@ -1056,7 +1073,6 @@ function OrdersView({ onUpdate }: { onUpdate: () => void }) {
                         </button>
                       </div>
                     </div>
-                    <p className="text-sm font-medium text-indigo-600 mb-3">{order.product_name}</p>
                     <div className="grid grid-cols-2 gap-4 text-xs mb-4">
                       <div>
                         <p className="text-slate-400 uppercase font-semibold mb-1">Quantidade</p>
@@ -1943,6 +1959,8 @@ function OrderForm({ order, products, operations, onSuccess }: { order: Producti
     setForm({ ...form, code: opCode });
   };
 
+  const selectedProduct = products.find(p => p.id === form.product_id);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const method = order ? 'PUT' : 'POST';
@@ -1975,17 +1993,24 @@ function OrderForm({ order, products, operations, onSuccess }: { order: Producti
           </select>
         </div>
       </div>
-      <div>
-        <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Produto</label>
-        <select
-          required
-          value={form.product_id}
-          onChange={e => setForm({ ...form, product_id: Number(e.target.value) })}
-          className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
-        >
-          <option value="">Selecionar Produto</option>
-          {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
+      <div className="flex gap-4 items-end">
+        <div className="flex-1">
+          <label className="block text-xs font-bold text-slate-400 uppercase mb-1">Produto</label>
+          <select
+            required
+            value={form.product_id}
+            onChange={e => setForm({ ...form, product_id: Number(e.target.value) })}
+            className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+          >
+            <option value="">Selecionar Produto</option>
+            {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </div>
+        {selectedProduct?.photo && (
+          <div className="w-11 h-11 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 shadow-sm">
+            <img src={selectedProduct.photo} alt={selectedProduct.name} className="w-full h-full object-cover" />
+          </div>
+        )}
       </div>
       <Input label="Quantidade" type="number" value={form.quantity} onChange={v => setForm({ ...form, quantity: Number(v) })} required />
       <div className="grid grid-cols-2 gap-4">
