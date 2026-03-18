@@ -1512,7 +1512,7 @@ function ReportsView({ company }: { company: CompanyInfo | null }) {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [sectionOrder, setSectionOrder] = useState<string[]>(() => {
     const saved = localStorage.getItem('reportsSectionOrder');
-    return saved ? JSON.parse(saved) : ['stats', 'finished', 'active', 'history'];
+    return saved ? JSON.parse(saved) : ['stats', 'finished', 'active'];
   });
 
   const handleMoveSection = (index: number, direction: number) => {
