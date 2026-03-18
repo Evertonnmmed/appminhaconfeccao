@@ -11,6 +11,8 @@ export const apiFetch = async (url: string, options: any = {}) => {
         delete body.operation_name;
         delete body.order_code;
         delete body.products;
+        delete body.branches;
+        delete body.production_orders;
         delete body.team_members;
         delete body.operations;
         delete body.branch_name;
