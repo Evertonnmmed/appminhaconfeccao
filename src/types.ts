@@ -16,6 +16,13 @@ export interface UserProfile {
   photo?: string;
 }
 
+export interface Branch {
+  id: number;
+  name: string;
+  address?: string;
+  manager?: string;
+}
+
 export interface Supply {
   id: number;
   name: string;
@@ -59,6 +66,8 @@ export interface ProductionOrder {
   delivery_date: string;
   priority: 'Baixa' | 'Média' | 'Alta';
   status: 'Planejado' | 'Em Produção' | 'Finalizado';
+  branch_id?: number | null;
+  branch_name?: string;
 }
 
 export interface ProductionLog {

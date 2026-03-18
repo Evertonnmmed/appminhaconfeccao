@@ -61,6 +61,14 @@ create table if not exists team (
   avatar text
 );
 
+create table if not exists branches (
+  id bigint primary key generated always as identity,
+  user_id uuid references auth.users not null,
+  name text not null,
+  address text,
+  manager text
+);
+
 create table if not exists production_orders (
   id bigint primary key generated always as identity,
   user_id uuid references auth.users not null,
@@ -93,6 +101,7 @@ alter table supplies enable row level security;
 alter table products enable row level security;
 alter table operations enable row level security;
 alter table team enable row level security;
+alter table branches enable row level security;
 alter table production_orders enable row level security;
 alter table production_logs enable row level security;
 
@@ -120,5 +129,11 @@ create policy "Acesso proprietario production_orders" on production_orders for a
 
 drop policy if exists "Acesso proprietario production_logs" on production_logs;
 create policy "Acesso proprietario production_logs" on production_logs for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "Acesso proprietario branches" on branches;
+create policy "Acesso proprietario branches" on branches for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- Nova coluna nas OPs para vincular a Filial (se a tabela já existir, ele só adiciona a coluna)
+alter table production_orders add column if not exists branch_id bigint references branches(id) on delete set null;
 
 -- FIM! 🚀 Sua base de dados está pronta para ser usada pela Vercel.

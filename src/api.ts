@@ -13,6 +13,7 @@ export const apiFetch = async (url: string, options: any = {}) => {
         delete body.products;
         delete body.team_members;
         delete body.operations;
+        delete body.branch_name;
     }
 
     const { data: { session } } = await supabase.auth.getSession();
@@ -92,21 +93,21 @@ export const apiFetch = async (url: string, options: any = {}) => {
         }
 
         // --- RESTful RESOURCES Regex ---
-        const matchGet = url.match(/^\/api\/(supplies|products|team|operations)$/);
+        const matchGet = url.match(/^\/api\/(supplies|products|team|operations|branches)$/);
         if (matchGet && method === 'GET') {
             const { data, error } = await supabase.from(matchGet[1]).select('*').order('id', { ascending: true });
             if (error) return errorResponse(error);
             return jsonResponse(data || []);
         }
 
-        const matchPost = url.match(/^\/api\/(supplies|products|team|operations)$/);
+        const matchPost = url.match(/^\/api\/(supplies|products|team|operations|branches)$/);
         if (matchPost && method === 'POST') {
             const { data, error } = await supabase.from(matchPost[1]).insert({ ...body, user_id: userId }).select('id').single();
             if (error) return errorResponse(error);
             return jsonResponse({ id: data?.id });
         }
 
-        const matchPut = url.match(/^\/api\/(supplies|products|team|operations|orders)\/(\d+)$/);
+        const matchPut = url.match(/^\/api\/(supplies|products|team|operations|orders|branches)\/(\d+)$/);
         if (matchPut && method === 'PUT') {
             const table = matchPut[1] === 'orders' ? 'production_orders' : matchPut[1];
             const { error } = await supabase.from(table).update(body).eq('id', matchPut[2]);
@@ -114,7 +115,7 @@ export const apiFetch = async (url: string, options: any = {}) => {
             return jsonResponse({ success: true });
         }
 
-        const matchDel = url.match(/^\/api\/(supplies|products|team|operations|orders|production-logs)\/(\d+)$/);
+        const matchDel = url.match(/^\/api\/(supplies|products|team|operations|orders|production-logs|branches)\/(\d+)$/);
         if (matchDel && method === 'DELETE') {
             const table = matchDel[1] === 'orders' ? 'production_orders' : (matchDel[1] === 'production-logs' ? 'production_logs' : matchDel[1]);
             const { error } = await supabase.from(table).delete().eq('id', matchDel[2]);
@@ -125,13 +126,14 @@ export const apiFetch = async (url: string, options: any = {}) => {
         // --- PRODUCTION ORDERS ---
         if (url === '/api/orders' && method === 'GET') {
             const { data, error } = await supabase.from('production_orders')
-                .select(`*, products(name)`)
+                .select(`*, products(name), branches(name)`)
                 .order('id', { ascending: true });
             if (error) return errorResponse(error);
 
             const mapped = data?.map((d: any) => ({
                 ...d,
-                product_name: d.products?.name
+                product_name: d.products?.name,
+                branch_name: d.branches?.name
             })) || [];
             return jsonResponse(mapped);
         }
