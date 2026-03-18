@@ -1539,13 +1539,6 @@ function ReportsView({ company }: { company: CompanyInfo | null }) {
     (selectedOP === 'ALL' || String(o.code || o.id) === selectedOP)
   );
 
-  const filteredLogs = logs.filter(l => {
-    const order = orders.find(o => o.id === l.order_id);
-    const branchMatch = selectedBranch === 'ALL' || order?.branch_id === selectedBranch;
-    const opMatch = selectedOP === 'ALL' || String(order?.code || order?.id) === selectedOP;
-    return branchMatch && opMatch;
-  });
-
   const activeOrders = filteredOrders.filter(o => o.status !== 'Finalizado');
   const finishedOrders = filteredOrders.filter(o => o.status === 'Finalizado');
 
@@ -1748,57 +1741,6 @@ function ReportsView({ company }: { company: CompanyInfo | null }) {
                           </tr>
                         </tfoot>
                       )}
-                    </table>
-                  </div>
-                </Card>
-              )}
-              {section === 'history' && (
-                <Card title="Histórico de Apontamentos (Relatório de Produção)" action={<div className="flex items-center gap-1 print:hidden"> <button onClick={() => handleMoveSection(index, -1)} disabled={index === 0} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors bg-slate-50 hover:bg-indigo-50 rounded" title="Mover para cima"> <ChevronUp size={18} /> </button> <button onClick={() => handleMoveSection(index, 1)} disabled={index === sectionOrder.length - 1} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors bg-slate-50 hover:bg-indigo-50 rounded" title="Mover para baixo"> <ChevronDown size={18} /> </button> </div>}>
-                  <div className="mb-4">
-                    <p className="text-xs text-slate-500">Este relatório detalha cada etapa da produção, registrando o operador, a operação realizada e os horários de início e fim. Ideal para rastreabilidade e controle de eficiência.</p>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead>
-                        <tr className="border-b border-slate-100">
-                          <th className="pb-4 font-semibold text-slate-600">Data</th>
-                          <th className="pb-4 font-semibold text-slate-600">OP</th>
-                          <th className="pb-4 font-semibold text-slate-600">Operador</th>
-                          <th className="pb-4 font-semibold text-slate-600">Operação</th>
-                          <th className="pb-4 font-semibold text-slate-600 text-right">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {filteredLogs.slice().reverse().map(log => {
-                          const getStatusVariant = (status: string) => {
-                            switch (status) {
-                              case 'Finalizado': return 'success';
-                              case 'Em Produção': return 'info';
-                              case 'Aguardando': return 'default';
-                              default: return 'default';
-                            }
-                          };
-
-                          return (
-                            <tr key={log.id} className="hover:bg-slate-50 transition-colors">
-                              <td className="py-3 text-slate-600">
-                                {log.start_time ? new Date(log.start_time).toLocaleDateString() : '-'}
-                              </td>
-                              <td className="py-3 font-bold text-slate-800">#{log.order_code || log.order_id}</td>
-                              <td className="py-3 text-slate-600">{log.operator_name}</td>
-                              <td className="py-3 text-slate-600">{log.operation_name}</td>
-                              <td className="py-3 text-right">
-                                <Badge variant={getStatusVariant(log.status)}>{log.status}</Badge>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                        {filteredLogs.length === 0 && (
-                          <tr>
-                            <td colSpan={5} className="py-8 text-center text-slate-400 italic">Nenhum apontamento encontrado para os filtros selecionados.</td>
-                          </tr>
-                        )}
-                      </tbody>
                     </table>
                   </div>
                 </Card>
