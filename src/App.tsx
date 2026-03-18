@@ -1491,6 +1491,16 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
   );
 }
 
+
+function SortableItem({ value, renderContent }: { value: string, renderContent: (controls: any) => React.ReactNode }) {
+  const controls = useDragControls();
+  return (
+    <Reorder.Item value={value} dragListener={false} dragControls={controls} className="relative group/reorder list-none bg-white rounded-2xl shadow-sm">
+      {renderContent(controls)}
+    </Reorder.Item>
+  );
+}
+
 function ReportsView() {
   const [logs, setLogs] = useState<ProductionLog[]>([]);
   const [orders, setOrders] = useState<ProductionOrder[]>([]);
@@ -1556,7 +1566,8 @@ function ReportsView() {
       
       <Reorder.Group axis="y" values={sectionOrder} onReorder={handleReorder} className="space-y-6">
         {sectionOrder.map((section) => (
-          <Reorder.Item key={section} value={section} className="relative group/reorder list-none">
+          <SortableItem key={section} value={section} renderContent={(dragControls) => (
+<>
             {section === 'stats' && (
               <div className="relative">
                 <div className="absolute -left-10 top-1/2 -translate-y-1/2 opacity-0 group-hover/reorder:opacity-100 p-2 cursor-grab active:cursor-grabbing text-slate-300 hover:text-indigo-500 transition-all hidden xl:block z-10" title="Arraste para reordenar" onPointerDown={(e) => e.stopPropagation()}>
@@ -1739,7 +1750,9 @@ function ReportsView() {
         </div>
       </Card>
             )}
-          </Reorder.Item>
+          </>
+)}
+/>
         ))}
       </Reorder.Group>
 
