@@ -1579,8 +1579,9 @@ function ReportsView({ company }: { company: CompanyInfo | null }) {
             ))}
           </select>
           <button
+            type="button"
             onClick={() => window.print()}
-            className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors print:hidden shrink-0 shadow-lg shadow-indigo-100"
+            className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors print:hidden shrink-0 shadow-lg shadow-indigo-100 active:scale-95"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
             Imprimir / PDF
@@ -1597,8 +1598,8 @@ function ReportsView({ company }: { company: CompanyInfo | null }) {
           </div>
           <div className="text-right">
             <p className="text-sm font-bold text-slate-700 uppercase tracking-wider">Filtros Aplicados</p>
-            <p className="text-indigo-600 font-bold">Filial: {selectedBranch === 'ALL' ? 'Todas' : branches.find(b => b.id === selectedBranch)?.name}</p>
-            <p className="text-indigo-600 font-bold">OP: {selectedOP === 'ALL' ? 'Todas' : `OP #${selectedOP}`}</p>
+            <p className="text-indigo-600 font-bold">Filial: {selectedBranch === 'ALL' ? 'Todas' : (branches.find(b => b.id === selectedBranch)?.name || 'Carregando...')}</p>
+            <p className="text-indigo-600 font-bold">OP: {selectedOP === 'ALL' ? 'Todas' : (orders.find(o => String(o.code || o.id) === selectedOP)?.code || selectedOP)}</p>
           </div>
         </div>
       </div>
