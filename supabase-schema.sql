@@ -65,6 +65,7 @@ create table if not exists branches (
   id bigint primary key generated always as identity,
   user_id uuid references auth.users not null,
   name text not null,
+  logo_url text,
   address text,
   manager text
 );
@@ -135,5 +136,8 @@ create policy "Acesso proprietario branches" on branches for all to authenticate
 
 -- Nova coluna nas OPs para vincular a Filial (se a tabela já existir, ele só adiciona a coluna)
 alter table production_orders add column if not exists branch_id bigint references branches(id) on delete set null;
+
+-- Nova coluna para armazenar o logo da filial
+alter table branches add column if not exists logo_url text;
 
 -- FIM! 🚀 Sua base de dados está pronta para ser usada pela Vercel.

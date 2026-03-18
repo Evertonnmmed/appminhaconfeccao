@@ -24,9 +24,11 @@ import {
   Mail,
   Lock,
   User as UserIcon,
-  GripVertical
+  GripVertical,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
-import { motion, AnimatePresence, Reorder, useDragControls } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from './supabase';
 import {
   DashboardData,
@@ -946,8 +948,16 @@ function BranchesView({ onUpdate }: { onUpdate: () => void }) {
           <div key={branch.id}>
             <Card>
               <div className="flex flex-col">
-                <div className="flex items-center gap-3 mb-4 text-indigo-600">
-                  <MapPin size={24} />
+                <div className="flex items-center gap-3 mb-4">
+                  {branch.logo_url ? (
+                    <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-100 shrink-0">
+                      <img src={branch.logo_url} alt={branch.name} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+                      <MapPin size={24} />
+                    </div>
+                  )}
                   <h3 className="font-bold text-slate-800 text-lg">{branch.name}</h3>
                 </div>
                 <div className="space-y-2 mb-6">
@@ -1493,14 +1503,7 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
 }
 
 
-function SortableItem({ value, renderContent, key }: { key?: string, value: string, renderContent: (controls: any) => React.ReactNode }) {
-  const controls = useDragControls();
-  return (
-    <Reorder.Item value={value} dragListener={false} dragControls={controls} className="relative group/reorder list-none bg-white rounded-2xl shadow-sm">
-      {renderContent(controls)}
-    </Reorder.Item>
-  );
-}
+
 
 function ReportsView() {
   const [logs, setLogs] = useState<ProductionLog[]>([]);
@@ -1512,7 +1515,11 @@ function ReportsView() {
     return saved ? JSON.parse(saved) : ['stats', 'finished', 'active', 'history'];
   });
 
-  const handleReorder = (newOrder: string[]) => {
+  const handleMoveSection = (index: number, direction: number) => {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= sectionOrder.length) return;
+    const newOrder = [...sectionOrder];
+    [newOrder[index], newOrder[newIndex]] = [newOrder[newIndex], newOrder[index]];
     setSectionOrder(newOrder);
     localStorage.setItem('reportsSectionOrder', JSON.stringify(newOrder));
   };
@@ -1565,15 +1572,13 @@ function ReportsView() {
       </div>
 
 
-      <Reorder.Group axis="y" values={sectionOrder} onReorder={handleReorder} className="space-y-6">
-        {sectionOrder.map((section) => (
-          <SortableItem key={section} value={section} renderContent={(dragControls) => (
+      <div className="space-y-6">
+        {sectionOrder.map((section, index) => (
+          <div key={section} className="relative group/reorder print:break-inside-avoid">
             <>
               {section === 'stats' && (
                 <div className="relative">
-                  <div className="absolute -left-10 top-1/2 -translate-y-1/2 opacity-0 group-hover/reorder:opacity-100 p-2 cursor-grab active:cursor-grabbing text-slate-300 hover:text-indigo-500 transition-all hidden xl:block z-10" title="Arraste para reordenar" onPointerDown={(e) => dragControls.start(e)}>
-                    <GripVertical size={24} />
-                  </div>
+                  <div className="absolute -left-16 top-1/2 -translate-y-1/2 opacity-0 group-hover/reorder:opacity-100 transition-all hidden xl:block z-10"><div className="flex items-center gap-1 print:hidden"> <button onClick={() => handleMoveSection(index, -1)} disabled={index === 0} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors bg-slate-50 hover:bg-indigo-50 rounded" title="Mover para cima"> <ChevronUp size={18} /> </button> <button onClick={() => handleMoveSection(index, 1)} disabled={index === sectionOrder.length - 1} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors bg-slate-50 hover:bg-indigo-50 rounded" title="Mover para baixo"> <ChevronDown size={18} /> </button> </div></div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6"><Card>
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0">
@@ -1611,7 +1616,7 @@ function ReportsView() {
                 </div>
               )}
               {section === 'finished' && (
-                <Card title="Peças Produzidas (Finalizadas)" action={<div className="text-slate-300 cursor-grab active:cursor-grabbing hover:text-indigo-500 transition-colors cursor-pointer z-50 pointer-events-auto" title="Arraste para reordenar" onPointerDown={(e) => e.stopPropagation()}><GripVertical size={20} /></div>}>
+                <Card title="Peças Produzidas (Finalizadas)" action={<div className="flex items-center gap-1 print:hidden"> <button onClick={() => handleMoveSection(index, -1)} disabled={index === 0} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors bg-slate-50 hover:bg-indigo-50 rounded" title="Mover para cima"> <ChevronUp size={18} /> </button> <button onClick={() => handleMoveSection(index, 1)} disabled={index === sectionOrder.length - 1} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors bg-slate-50 hover:bg-indigo-50 rounded" title="Mover para baixo"> <ChevronDown size={18} /> </button> </div>}>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                       <thead>
@@ -1662,7 +1667,7 @@ function ReportsView() {
                 </Card>
               )}
               {section === 'active' && (
-                <Card title="Ordens Ativas" action={<div className="text-slate-300 cursor-grab active:cursor-grabbing hover:text-indigo-500 transition-colors cursor-pointer z-50 pointer-events-auto" title="Arraste para reordenar" onPointerDown={(e) => e.stopPropagation()}><GripVertical size={20} /></div>}>
+                <Card title="Ordens Ativas" action={<div className="flex items-center gap-1 print:hidden"> <button onClick={() => handleMoveSection(index, -1)} disabled={index === 0} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors bg-slate-50 hover:bg-indigo-50 rounded" title="Mover para cima"> <ChevronUp size={18} /> </button> <button onClick={() => handleMoveSection(index, 1)} disabled={index === sectionOrder.length - 1} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors bg-slate-50 hover:bg-indigo-50 rounded" title="Mover para baixo"> <ChevronDown size={18} /> </button> </div>}>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                       <thead>
@@ -1709,7 +1714,7 @@ function ReportsView() {
                 </Card>
               )}
               {section === 'history' && (
-                <Card title="Histórico de Apontamentos" action={<div className="text-slate-300 cursor-grab active:cursor-grabbing hover:text-indigo-500 transition-colors cursor-pointer z-50 pointer-events-auto" title="Arraste para reordenar" onPointerDown={(e) => e.stopPropagation()}><GripVertical size={20} /></div>}>
+                <Card title="Histórico de Apontamentos" action={<div className="flex items-center gap-1 print:hidden"> <button onClick={() => handleMoveSection(index, -1)} disabled={index === 0} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors bg-slate-50 hover:bg-indigo-50 rounded" title="Mover para cima"> <ChevronUp size={18} /> </button> <button onClick={() => handleMoveSection(index, 1)} disabled={index === sectionOrder.length - 1} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors bg-slate-50 hover:bg-indigo-50 rounded" title="Mover para baixo"> <ChevronDown size={18} /> </button> </div>}>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                       <thead>
@@ -1752,11 +1757,9 @@ function ReportsView() {
                 </Card>
               )}
             </>
-          )}
-          />
+          </div>
         ))}
-      </Reorder.Group>
-
+      </div>
     </div>
   );
 }
@@ -1897,7 +1900,7 @@ function Modal({ title, children, onClose }: { title: string, children: React.Re
 }
 
 function BranchForm({ branch, onSuccess }: { branch: Branch | null, onSuccess: () => void }) {
-  const [form, setForm] = useState(branch || { name: '', address: '', manager: '' });
+  const [form, setForm] = useState(branch || { name: '', address: '', manager: '', logo_url: '' });
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const method = branch ? 'PUT' : 'POST';
@@ -1914,6 +1917,12 @@ function BranchForm({ branch, onSuccess }: { branch: Branch | null, onSuccess: (
       <Input label="Nome da Filial" value={form.name} onChange={v => setForm({ ...form, name: v })} required />
       <Input label="Endereço" value={form.address} onChange={v => setForm({ ...form, address: v })} />
       <Input label="Gerente Responsável" value={form.manager} onChange={v => setForm({ ...form, manager: v })} />
+      <Input label="URL da Imagem / Logo" value={form.logo_url} onChange={v => setForm({ ...form, logo_url: v })} />
+      {form.logo_url && (
+        <div className="w-16 h-16 rounded-xl overflow-hidden border border-slate-200 mt-2">
+          <img src={form.logo_url} alt="Preview" className="w-full h-full object-cover" />
+        </div>
+      )}
       <button type="submit" className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors">
         {branch ? 'Salvar Alterações' : 'Cadastrar Filial'}
       </button>

@@ -19,6 +19,7 @@ export interface UserProfile {
 export interface Branch {
   id: number;
   name: string;
+  logo_url?: string;
   address?: string;
   manager?: string;
 }
