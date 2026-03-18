@@ -23,9 +23,10 @@ import {
   LogOut,
   Mail,
   Lock,
-  User as UserIcon
+  User as UserIcon,
+  GripVertical
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, Reorder, useDragControls } from 'motion/react';
 import { supabase } from './supabase';
 import {
   DashboardData,
@@ -1492,7 +1493,7 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
 }
 
 
-function SortableItem({ value, renderContent }: { value: string, renderContent: (controls: any) => React.ReactNode }) {
+function SortableItem({ value, renderContent, key }: { key?: string, value: string, renderContent: (controls: any) => React.ReactNode }) {
   const controls = useDragControls();
   return (
     <Reorder.Item value={value} dragListener={false} dragControls={controls} className="relative group/reorder list-none bg-white rounded-2xl shadow-sm">
@@ -1506,7 +1507,7 @@ function ReportsView() {
   const [orders, setOrders] = useState<ProductionOrder[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
-    const [sectionOrder, setSectionOrder] = useState<string[]>(() => {
+  const [sectionOrder, setSectionOrder] = useState<string[]>(() => {
     const saved = localStorage.getItem('reportsSectionOrder');
     return saved ? JSON.parse(saved) : ['stats', 'finished', 'active', 'history'];
   });
@@ -1563,196 +1564,196 @@ function ReportsView() {
         </div>
       </div>
 
-      
+
       <Reorder.Group axis="y" values={sectionOrder} onReorder={handleReorder} className="space-y-6">
         {sectionOrder.map((section) => (
           <SortableItem key={section} value={section} renderContent={(dragControls) => (
-<>
-            {section === 'stats' && (
-              <div className="relative">
-                <div className="absolute -left-10 top-1/2 -translate-y-1/2 opacity-0 group-hover/reorder:opacity-100 p-2 cursor-grab active:cursor-grabbing text-slate-300 hover:text-indigo-500 transition-all hidden xl:block z-10" title="Arraste para reordenar" onPointerDown={(e) => e.stopPropagation()}>
-                  <GripVertical size={24} />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6"><Card>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0">
-              <CheckCircle2 size={24} />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Peças Finalizadas</p>
-              <h3 className="text-2xl font-bold text-slate-800">{totalFinishedPieces}</h3>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
-              <Play size={24} />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Em Produção (Peças)</p>
-              <h3 className="text-2xl font-bold text-slate-800">{totalInProductionPieces}</h3>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-100 text-slate-600 rounded-2xl flex items-center justify-center shrink-0">
-              <Calendar size={24} />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Planejado (Peças)</p>
-              <h3 className="text-2xl font-bold text-slate-800">{totalPlannedPieces}</h3>
-            </div>
-          </div>
-        </Card>
-      </div>
-              </div>
-            )}
-            {section === 'finished' && (
-              <Card title="Peças Produzidas (Finalizadas)" action={<div className="text-slate-300 cursor-grab active:cursor-grabbing hover:text-indigo-500 transition-colors cursor-pointer z-50 pointer-events-auto" title="Arraste para reordenar" onPointerDown={(e) => e.stopPropagation()}><GripVertical size={20} /></div>}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="pb-4 font-semibold text-slate-600">OP</th>
-                  <th className="pb-4 font-semibold text-slate-600">Cód. Produto</th>
-                  <th className="pb-4 font-semibold text-slate-600">Produto</th>
-                  <th className="pb-4 font-semibold text-slate-600 text-right">Qtd</th>
-                  <th className="pb-4 font-semibold text-slate-600 text-right">Valor Unit.</th>
-                  <th className="pb-4 font-semibold text-slate-600 text-right">Valor Total</th>
-                  <th className="pb-4 font-semibold text-slate-600 text-right">Filial</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {finishedOrders.map(order => {
-                  const product = products.find(p => p.id === order.product_id);
-                  const branchName = order.branch_name || '-';
-                  return (
-                    <tr key={order.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-3 font-bold text-slate-800">#{order.code || order.id}</td>
-                      <td className="py-3 font-mono text-indigo-600">{product?.code || '-'}</td>
-                      <td className="py-3 text-slate-600">{order.product_name}</td>
-                      <td className="py-3 text-right font-bold text-slate-800">{order.quantity}</td>
-                      <td className="py-3 text-right text-slate-600 whitespace-nowrap">R$ {(product?.unit_cost || 0).toFixed(2)}</td>
-                      <td className="py-3 text-right font-bold text-emerald-600 whitespace-nowrap">R$ {((product?.unit_cost || 0) * order.quantity).toFixed(2)}</td>
-                      <td className="py-3 text-right text-slate-600 truncate max-w-[120px]">{branchName}</td>
-                    </tr>
-                  );
-                })}
-                {finishedOrders.length === 0 && (
-                  <tr>
-                    <td colSpan={7} className="py-8 text-center text-slate-400 italic">Nenhuma ordem finalizada</td>
-                  </tr>
-                )}
-              </tbody>
-              {finishedOrders.length > 0 && (
-                <tfoot>
-                  <tr className="border-t border-slate-100 bg-slate-50/50">
-                    <td colSpan={3} className="py-3 font-bold text-slate-600 text-right">TOTAL FINALIZADO:</td>
-                    <td className="py-3 text-right font-bold text-slate-800">{totalFinishedPieces} <span className="text-xs text-slate-500 font-normal">pçs</span></td>
-                    <td colSpan={2} className="py-3 text-right font-bold text-emerald-600 whitespace-nowrap border-l border-slate-200">R$ {totalFinishedValue.toFixed(2)}</td>
-                    <td></td>
-                  </tr>
-                </tfoot>
-              )}
-            </table>
-          </div>
-        </Card>
-            )}
-            {section === 'active' && (
-              <Card title="Ordens Ativas" action={<div className="text-slate-300 cursor-grab active:cursor-grabbing hover:text-indigo-500 transition-colors cursor-pointer z-50 pointer-events-auto" title="Arraste para reordenar" onPointerDown={(e) => e.stopPropagation()}><GripVertical size={20} /></div>}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  <th className="pb-4 font-semibold text-slate-600">OP</th>
-                  <th className="pb-4 font-semibold text-slate-600">Produto</th>
-                  <th className="pb-4 font-semibold text-slate-600">Status</th>
-                  <th className="pb-4 font-semibold text-slate-600 text-right">Progresso</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {activeOrders.map(order => (
-                  <tr key={order.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-3 font-bold text-slate-800">#{order.code || order.id}</td>
-                    <td className="py-3 text-slate-600 truncate max-w-[120px]">{order.product_name}</td>
-                    <td className="py-3">
-                      <Badge variant={order.status === 'Em Produção' ? 'info' : 'default'}>{order.status}</Badge>
-                    </td>
-                    <td className="py-3 text-right">
-                      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full transition-all duration-500 ${order.status === 'Em Produção' ? 'bg-indigo-500 w-1/2' : 'bg-slate-300 w-0'}`}
-                        />
+            <>
+              {section === 'stats' && (
+                <div className="relative">
+                  <div className="absolute -left-10 top-1/2 -translate-y-1/2 opacity-0 group-hover/reorder:opacity-100 p-2 cursor-grab active:cursor-grabbing text-slate-300 hover:text-indigo-500 transition-all hidden xl:block z-10" title="Arraste para reordenar" onPointerDown={(e) => dragControls.start(e)}>
+                    <GripVertical size={24} />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6"><Card>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0">
+                        <CheckCircle2 size={24} />
                       </div>
-                    </td>
-                  </tr>
-                ))}
-                {activeOrders.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="py-8 text-center text-slate-400 italic">Nenhuma ordem ativa</td>
-                  </tr>
-                )}
-              </tbody>
-              {activeOrders.length > 0 && (
-                <tfoot>
-                  <tr className="border-t border-slate-100 bg-slate-50/50">
-                    <td colSpan={3} className="py-3 font-bold text-slate-600 text-right">TOTAL EM ABERTO:</td>
-                    <td className="py-3 text-right font-bold text-indigo-600">{activeOrders.reduce((acc, o) => acc + o.quantity, 0)}</td>
-                  </tr>
-                </tfoot>
+                      <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Peças Finalizadas</p>
+                        <h3 className="text-2xl font-bold text-slate-800">{totalFinishedPieces}</h3>
+                      </div>
+                    </div>
+                  </Card>
+                    <Card>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center shrink-0">
+                          <Play size={24} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Em Produção (Peças)</p>
+                          <h3 className="text-2xl font-bold text-slate-800">{totalInProductionPieces}</h3>
+                        </div>
+                      </div>
+                    </Card>
+                    <Card>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-slate-100 text-slate-600 rounded-2xl flex items-center justify-center shrink-0">
+                          <Calendar size={24} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Planejado (Peças)</p>
+                          <h3 className="text-2xl font-bold text-slate-800">{totalPlannedPieces}</h3>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
               )}
-            </table>
-          </div>
-        </Card>
-            )}
-            {section === 'history' && (
-              <Card title="Histórico de Apontamentos" action={<div className="text-slate-300 cursor-grab active:cursor-grabbing hover:text-indigo-500 transition-colors cursor-pointer z-50 pointer-events-auto" title="Arraste para reordenar" onPointerDown={(e) => e.stopPropagation()}><GripVertical size={20} /></div>}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr className="border-b border-slate-100">
-                <th className="pb-4 font-semibold text-slate-600">Data</th>
-                <th className="pb-4 font-semibold text-slate-600">OP</th>
-                <th className="pb-4 font-semibold text-slate-600">Operador</th>
-                <th className="pb-4 font-semibold text-slate-600">Operação</th>
-                <th className="pb-4 font-semibold text-slate-600 text-right">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {logs.slice().reverse().map(log => {
-                const getStatusVariant = (status: string) => {
-                  switch (status) {
-                    case 'Finalizado': return 'success';
-                    case 'Em Produção': return 'info';
-                    case 'Aguardando': return 'default';
-                    default: return 'default';
-                  }
-                };
+              {section === 'finished' && (
+                <Card title="Peças Produzidas (Finalizadas)" action={<div className="text-slate-300 cursor-grab active:cursor-grabbing hover:text-indigo-500 transition-colors cursor-pointer z-50 pointer-events-auto" title="Arraste para reordenar" onPointerDown={(e) => e.stopPropagation()}><GripVertical size={20} /></div>}>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-100">
+                          <th className="pb-4 font-semibold text-slate-600">OP</th>
+                          <th className="pb-4 font-semibold text-slate-600">Cód. Produto</th>
+                          <th className="pb-4 font-semibold text-slate-600">Produto</th>
+                          <th className="pb-4 font-semibold text-slate-600 text-right">Qtd</th>
+                          <th className="pb-4 font-semibold text-slate-600 text-right">Valor Unit.</th>
+                          <th className="pb-4 font-semibold text-slate-600 text-right">Valor Total</th>
+                          <th className="pb-4 font-semibold text-slate-600 text-right">Filial</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {finishedOrders.map(order => {
+                          const product = products.find(p => p.id === order.product_id);
+                          const branchName = order.branch_name || '-';
+                          return (
+                            <tr key={order.id} className="hover:bg-slate-50 transition-colors">
+                              <td className="py-3 font-bold text-slate-800">#{order.code || order.id}</td>
+                              <td className="py-3 font-mono text-indigo-600">{product?.code || '-'}</td>
+                              <td className="py-3 text-slate-600">{order.product_name}</td>
+                              <td className="py-3 text-right font-bold text-slate-800">{order.quantity}</td>
+                              <td className="py-3 text-right text-slate-600 whitespace-nowrap">R$ {(product?.unit_cost || 0).toFixed(2)}</td>
+                              <td className="py-3 text-right font-bold text-emerald-600 whitespace-nowrap">R$ {((product?.unit_cost || 0) * order.quantity).toFixed(2)}</td>
+                              <td className="py-3 text-right text-slate-600 truncate max-w-[120px]">{branchName}</td>
+                            </tr>
+                          );
+                        })}
+                        {finishedOrders.length === 0 && (
+                          <tr>
+                            <td colSpan={7} className="py-8 text-center text-slate-400 italic">Nenhuma ordem finalizada</td>
+                          </tr>
+                        )}
+                      </tbody>
+                      {finishedOrders.length > 0 && (
+                        <tfoot>
+                          <tr className="border-t border-slate-100 bg-slate-50/50">
+                            <td colSpan={3} className="py-3 font-bold text-slate-600 text-right">TOTAL FINALIZADO:</td>
+                            <td className="py-3 text-right font-bold text-slate-800">{totalFinishedPieces} <span className="text-xs text-slate-500 font-normal">pçs</span></td>
+                            <td colSpan={2} className="py-3 text-right font-bold text-emerald-600 whitespace-nowrap border-l border-slate-200">R$ {totalFinishedValue.toFixed(2)}</td>
+                            <td></td>
+                          </tr>
+                        </tfoot>
+                      )}
+                    </table>
+                  </div>
+                </Card>
+              )}
+              {section === 'active' && (
+                <Card title="Ordens Ativas" action={<div className="text-slate-300 cursor-grab active:cursor-grabbing hover:text-indigo-500 transition-colors cursor-pointer z-50 pointer-events-auto" title="Arraste para reordenar" onPointerDown={(e) => e.stopPropagation()}><GripVertical size={20} /></div>}>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-100">
+                          <th className="pb-4 font-semibold text-slate-600">OP</th>
+                          <th className="pb-4 font-semibold text-slate-600">Produto</th>
+                          <th className="pb-4 font-semibold text-slate-600">Status</th>
+                          <th className="pb-4 font-semibold text-slate-600 text-right">Progresso</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {activeOrders.map(order => (
+                          <tr key={order.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="py-3 font-bold text-slate-800">#{order.code || order.id}</td>
+                            <td className="py-3 text-slate-600 truncate max-w-[120px]">{order.product_name}</td>
+                            <td className="py-3">
+                              <Badge variant={order.status === 'Em Produção' ? 'info' : 'default'}>{order.status}</Badge>
+                            </td>
+                            <td className="py-3 text-right">
+                              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full transition-all duration-500 ${order.status === 'Em Produção' ? 'bg-indigo-500 w-1/2' : 'bg-slate-300 w-0'}`}
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                        {activeOrders.length === 0 && (
+                          <tr>
+                            <td colSpan={4} className="py-8 text-center text-slate-400 italic">Nenhuma ordem ativa</td>
+                          </tr>
+                        )}
+                      </tbody>
+                      {activeOrders.length > 0 && (
+                        <tfoot>
+                          <tr className="border-t border-slate-100 bg-slate-50/50">
+                            <td colSpan={3} className="py-3 font-bold text-slate-600 text-right">TOTAL EM ABERTO:</td>
+                            <td className="py-3 text-right font-bold text-indigo-600">{activeOrders.reduce((acc, o) => acc + o.quantity, 0)}</td>
+                          </tr>
+                        </tfoot>
+                      )}
+                    </table>
+                  </div>
+                </Card>
+              )}
+              {section === 'history' && (
+                <Card title="Histórico de Apontamentos" action={<div className="text-slate-300 cursor-grab active:cursor-grabbing hover:text-indigo-500 transition-colors cursor-pointer z-50 pointer-events-auto" title="Arraste para reordenar" onPointerDown={(e) => e.stopPropagation()}><GripVertical size={20} /></div>}>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-100">
+                          <th className="pb-4 font-semibold text-slate-600">Data</th>
+                          <th className="pb-4 font-semibold text-slate-600">OP</th>
+                          <th className="pb-4 font-semibold text-slate-600">Operador</th>
+                          <th className="pb-4 font-semibold text-slate-600">Operação</th>
+                          <th className="pb-4 font-semibold text-slate-600 text-right">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {logs.slice().reverse().map(log => {
+                          const getStatusVariant = (status: string) => {
+                            switch (status) {
+                              case 'Finalizado': return 'success';
+                              case 'Em Produção': return 'info';
+                              case 'Aguardando': return 'default';
+                              default: return 'default';
+                            }
+                          };
 
-                return (
-                  <tr key={log.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="py-3 text-slate-600">
-                      {log.start_time ? new Date(log.start_time).toLocaleDateString() : '-'}
-                    </td>
-                    <td className="py-3 font-bold text-slate-800">#{log.order_code || log.order_id}</td>
-                    <td className="py-3 text-slate-600">{log.operator_name}</td>
-                    <td className="py-3 text-slate-600">{log.operation_name}</td>
-                    <td className="py-3 text-right">
-                      <Badge variant={getStatusVariant(log.status)}>{log.status}</Badge>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-            )}
-          </>
-)}
-/>
+                          return (
+                            <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                              <td className="py-3 text-slate-600">
+                                {log.start_time ? new Date(log.start_time).toLocaleDateString() : '-'}
+                              </td>
+                              <td className="py-3 font-bold text-slate-800">#{log.order_code || log.order_id}</td>
+                              <td className="py-3 text-slate-600">{log.operator_name}</td>
+                              <td className="py-3 text-slate-600">{log.operation_name}</td>
+                              <td className="py-3 text-right">
+                                <Badge variant={getStatusVariant(log.status)}>{log.status}</Badge>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
+              )}
+            </>
+          )}
+          />
         ))}
       </Reorder.Group>
 
