@@ -257,7 +257,7 @@ export default function App() {
       case 'equipe': return <TeamView onUpdate={fetchData} />;
       case 'filiais': return <BranchesView onUpdate={fetchData} />;
       case 'ordens': return <OrdersView onUpdate={fetchData} />;
-      case 'relatorios': return <ReportsView />;
+      case 'relatorios': return <ReportsView company={company} />;
       case 'configuracoes': return <SettingsView company={company} user={user} onUpdate={fetchData} />;
       default: return <DashboardView dashboard={dashboard} user={user} onUpdate={fetchData} />;
     }
@@ -1505,7 +1505,7 @@ function ShopFloorView({ onUpdate }: { onUpdate: () => void }) {
 
 
 
-function ReportsView() {
+function ReportsView({ company }: { company: CompanyInfo | null }) {
   const [logs, setLogs] = useState<ProductionLog[]>([]);
   const [orders, setOrders] = useState<ProductionOrder[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -1525,6 +1525,7 @@ function ReportsView() {
   };
 
   const [selectedBranch, setSelectedBranch] = useState<number | 'ALL'>('ALL');
+  const [selectedOP, setSelectedOP] = useState<string | 'ALL'>('ALL');
 
   useEffect(() => {
     apiFetch('/api/production-logs').then(res => res.json()).then(setLogs);
@@ -1533,7 +1534,17 @@ function ReportsView() {
     apiFetch('/api/branches').then(res => res.json()).then(setBranches);
   }, []);
 
-  const filteredOrders = orders.filter(o => selectedBranch === 'ALL' || o.branch_id === selectedBranch);
+  const filteredOrders = orders.filter(o =>
+    (selectedBranch === 'ALL' || o.branch_id === selectedBranch) &&
+    (selectedOP === 'ALL' || String(o.code || o.id) === selectedOP)
+  );
+
+  const filteredLogs = logs.filter(l => {
+    const order = orders.find(o => o.id === l.order_id);
+    const branchMatch = selectedBranch === 'ALL' || order?.branch_id === selectedBranch;
+    const opMatch = selectedOP === 'ALL' || String(order?.code || order?.id) === selectedOP;
+    return branchMatch && opMatch;
+  });
 
   const activeOrders = filteredOrders.filter(o => o.status !== 'Finalizado');
   const finishedOrders = filteredOrders.filter(o => o.status === 'Finalizado');
@@ -1549,21 +1560,34 @@ function ReportsView() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-2xl font-bold text-slate-800">Relatórios e Indicadores</h2>
-        <div className="flex w-full sm:w-auto gap-2">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-800">Relatórios e Indicadores</h2>
+          <p className="text-slate-500 text-sm print:hidden">Visualize o desempenho da sua produção por filial e OP.</p>
+        </div>
+        <div className="flex flex-wrap w-full sm:w-auto gap-2">
           <select
             value={selectedBranch}
             onChange={e => setSelectedBranch(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
-            className="w-full sm:w-auto px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none print:hidden text-sm bg-white"
+            className="flex-1 sm:flex-none px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none print:hidden text-sm bg-white"
           >
             <option value="ALL">Todas as Filiais</option>
             {branches.map(b => (
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
           </select>
+          <select
+            value={selectedOP}
+            onChange={e => setSelectedOP(e.target.value)}
+            className="flex-1 sm:flex-none px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none print:hidden text-sm bg-white"
+          >
+            <option value="ALL">Todas as OPs</option>
+            {orders.map(o => (
+              <option key={o.id} value={String(o.code || o.id)}>OP #{o.code || o.id}</option>
+            ))}
+          </select>
           <button
             onClick={() => window.print()}
-            className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors print:hidden shrink-0"
+            className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors print:hidden shrink-0 shadow-lg shadow-indigo-100"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
             Imprimir / PDF
@@ -1572,8 +1596,23 @@ function ReportsView() {
       </div>
 
 
+      <div className="hidden print:block mb-8 border-b-2 border-slate-200 pb-4">
+        <div className="flex justify-between items-end">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">{company?.name || 'Relatório de Produção'}</h1>
+            <p className="text-slate-500">Gerado em {new Date().toLocaleDateString()} às {new Date().toLocaleTimeString()}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-bold text-slate-700 uppercase tracking-wider">Filtros Aplicados</p>
+            <p className="text-indigo-600 font-bold">Filial: {selectedBranch === 'ALL' ? 'Todas' : branches.find(b => b.id === selectedBranch)?.name}</p>
+            <p className="text-indigo-600 font-bold">OP: {selectedOP === 'ALL' ? 'Todas' : `OP #${selectedOP}`}</p>
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-6">
         {sectionOrder.map((section, index) => (
+
           <div key={section} className="relative group/reorder print:break-inside-avoid">
             <>
               {section === 'stats' && (
@@ -1714,7 +1753,10 @@ function ReportsView() {
                 </Card>
               )}
               {section === 'history' && (
-                <Card title="Histórico de Apontamentos" action={<div className="flex items-center gap-1 print:hidden"> <button onClick={() => handleMoveSection(index, -1)} disabled={index === 0} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors bg-slate-50 hover:bg-indigo-50 rounded" title="Mover para cima"> <ChevronUp size={18} /> </button> <button onClick={() => handleMoveSection(index, 1)} disabled={index === sectionOrder.length - 1} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors bg-slate-50 hover:bg-indigo-50 rounded" title="Mover para baixo"> <ChevronDown size={18} /> </button> </div>}>
+                <Card title="Histórico de Apontamentos (Relatório de Produção)" action={<div className="flex items-center gap-1 print:hidden"> <button onClick={() => handleMoveSection(index, -1)} disabled={index === 0} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors bg-slate-50 hover:bg-indigo-50 rounded" title="Mover para cima"> <ChevronUp size={18} /> </button> <button onClick={() => handleMoveSection(index, 1)} disabled={index === sectionOrder.length - 1} className="p-1 text-slate-400 hover:text-indigo-600 disabled:opacity-30 disabled:hover:text-slate-400 transition-colors bg-slate-50 hover:bg-indigo-50 rounded" title="Mover para baixo"> <ChevronDown size={18} /> </button> </div>}>
+                  <div className="mb-4">
+                    <p className="text-xs text-slate-500">Este relatório detalha cada etapa da produção, registrando o operador, a operação realizada e os horários de início e fim. Ideal para rastreabilidade e controle de eficiência.</p>
+                  </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                       <thead>
@@ -1727,7 +1769,7 @@ function ReportsView() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
-                        {logs.slice().reverse().map(log => {
+                        {filteredLogs.slice().reverse().map(log => {
                           const getStatusVariant = (status: string) => {
                             switch (status) {
                               case 'Finalizado': return 'success';
@@ -1751,6 +1793,11 @@ function ReportsView() {
                             </tr>
                           );
                         })}
+                        {filteredLogs.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="py-8 text-center text-slate-400 italic">Nenhum apontamento encontrado para os filtros selecionados.</td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -1760,7 +1807,7 @@ function ReportsView() {
           </div>
         ))}
       </div>
-    </div>
+    </div >
   );
 }
 
@@ -1901,6 +1948,18 @@ function Modal({ title, children, onClose }: { title: string, children: React.Re
 
 function BranchForm({ branch, onSuccess }: { branch: Branch | null, onSuccess: () => void }) {
   const [form, setForm] = useState(branch || { name: '', address: '', manager: '', logo_url: '' });
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setForm({ ...form, logo_url: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const method = branch ? 'PUT' : 'POST';
@@ -1912,23 +1971,54 @@ function BranchForm({ branch, onSuccess }: { branch: Branch | null, onSuccess: (
     });
     onSuccess();
   };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <Input label="Nome da Filial" value={form.name} onChange={v => setForm({ ...form, name: v })} required />
-      <Input label="Endereço" value={form.address} onChange={v => setForm({ ...form, address: v })} />
-      <Input label="Gerente Responsável" value={form.manager} onChange={v => setForm({ ...form, manager: v })} />
-      <Input label="URL da Imagem / Logo" value={form.logo_url} onChange={v => setForm({ ...form, logo_url: v })} />
-      {form.logo_url && (
-        <div className="w-16 h-16 rounded-xl overflow-hidden border border-slate-200 mt-2">
-          <img src={form.logo_url} alt="Preview" className="w-full h-full object-cover" />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 mb-4">
+        <h4 className="text-xs font-bold text-slate-400 uppercase mb-4 tracking-wider text-center">Logo da Filial</h4>
+        <div className="flex flex-col items-center">
+          <label className="relative group cursor-pointer">
+            <div className="w-32 h-32 rounded-2xl bg-white border-2 border-dashed border-slate-200 flex flex-col items-center justify-center overflow-hidden group-hover:border-indigo-300 transition-all shadow-sm">
+              {form.logo_url ? (
+                <img src={form.logo_url} alt="Preview" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-center p-2">
+                  <div className="w-10 h-10 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                    <Plus size={20} />
+                  </div>
+                  <p className="text-xs font-bold text-slate-600">Subir Logo</p>
+                </div>
+              )}
+            </div>
+            <input type="file" className="hidden" accept="image/*" onChange={handleLogoChange} />
+            {form.logo_url && (
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-2xl">
+                <button
+                  type="button"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setForm({ ...form, logo_url: '' }); }}
+                  className="p-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors shadow-lg"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            )}
+          </label>
         </div>
-      )}
-      <button type="submit" className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors">
+      </div>
+
+      <div className="space-y-4">
+        <Input label="Nome da Filial" value={form.name} onChange={v => setForm({ ...form, name: v })} required />
+        <Input label="Endereço" value={form.address} onChange={v => setForm({ ...form, address: v })} />
+        <Input label="Gerente Responsável" value={form.manager} onChange={v => setForm({ ...form, manager: v })} />
+      </div>
+
+      <button type="submit" className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">
         {branch ? 'Salvar Alterações' : 'Cadastrar Filial'}
       </button>
     </form>
   );
 }
+
 
 function Input({ label, value, onChange, type = 'text', required = false }: { label: string, value: any, onChange: (v: any) => void, type?: string, required?: boolean }) {
   return (
