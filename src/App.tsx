@@ -1550,6 +1550,144 @@ function ReportsView({ company }: { company: CompanyInfo | null }) {
   const totalInProductionPieces = activeOrders.filter(o => o.status === 'Em Produção').reduce((acc, o) => acc + o.quantity, 0);
   const totalPlannedPieces = activeOrders.filter(o => o.status === 'Planejado').reduce((acc, o) => acc + o.quantity, 0);
 
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Bloqueador de pop-ups detectado! Por favor, habilite pop-ups para imprimir seu relatório.');
+      return;
+    }
+
+    const companyName = company?.name || 'Minha Confecção';
+    const date = new Date().toLocaleDateString();
+    const time = new Date().toLocaleTimeString();
+    const branchName = selectedBranch === 'ALL' ? 'Todas' : (branches.find(b => b.id === selectedBranch)?.name || 'Carregando...');
+    const opName = selectedOP === 'ALL' ? 'Todas' : (orders.find(o => String(o.code || o.id) === selectedOP)?.code || selectedOP);
+
+    let html = `
+      <html>
+        <head>
+          <title>Relatório de Produção - ${companyName}</title>
+          <style>
+            body { font-family: sans-serif; padding: 40px; color: #334155; }
+            h1 { color: #1e293b; margin-bottom: 5px; }
+            .header { border-bottom: 2px solid #e2e8f0; margin-bottom: 30px; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: flex-end; }
+            .filters { font-size: 14px; text-align: right; }
+            .stats { display: grid; grid-template-cols: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+            .stat-card { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; }
+            .stat-label { font-size: 10px; font-weight: bold; color: #64748b; text-transform: uppercase; }
+            .stat-value { font-size: 20px; font-weight: bold; color: #1e293b; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { text-align: left; padding: 10px; border-bottom: 2px solid #e2e8f0; font-size: 12px; color: #64748b; text-transform: uppercase; }
+            td { padding: 12px 10px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+            .card-title { font-size: 18px; font-weight: bold; color: #334155; margin-top: 30px; margin-bottom: 10px; }
+            .text-right { text-align: right; }
+            .font-bold { font-weight: bold; }
+            .text-emerald-600 { color: #059669; }
+            .text-indigo-600 { color: #4f46e5; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1>${companyName}</h1>
+              <p style="margin:0; font-size:12px; color:#64748b;">Relatório Gerado em ${date} às ${time}</p>
+            </div>
+            <div class="filters">
+              <p style="margin:0"><strong>Filial:</strong> ${branchName}</p>
+              <p style="margin:0"><strong>OP:</strong> ${opName}</p>
+            </div>
+          </div>
+
+          <div class="stats">
+            <div class="stat-card">
+              <div class="stat-label">Peças Finalizadas</div>
+              <div class="stat-value">${totalFinishedPieces}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Em Produção (Peças)</div>
+              <div class="stat-value">${totalInProductionPieces}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Planejado (Peças)</div>
+              <div class="stat-value">${totalPlannedPieces}</div>
+            </div>
+          </div>
+
+          <div class="card-title">Peças Produzidas (Finalizadas)</div>
+          <table>
+            <thead>
+              <tr>
+                <th>OP</th>
+                <th>Cód. Produto</th>
+                <th>Produto</th>
+                <th class="text-right">Qtd</th>
+                <th class="text-right">Valor Unit.</th>
+                <th class="text-right">Valor Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${finishedOrders.map(o => {
+      const p = products.find(prod => prod.id === o.product_id);
+      return `
+                  <tr>
+                    <td class="font-bold">#${o.code || o.id}</td>
+                    <td class="text-indigo-600">${p?.code || '-'}</td>
+                    <td>${o.product_name}</td>
+                    <td class="text-right font-bold">${o.quantity}</td>
+                    <td class="text-right">R$ ${(p?.unit_cost || 0).toFixed(2)}</td>
+                    <td class="text-right font-bold text-emerald-600">R$ ${((p?.unit_cost || 0) * o.quantity).toFixed(2)}</td>
+                  </tr>
+                `;
+    }).join('')}
+              ${finishedOrders.length === 0 ? '<tr><td colspan="6" style="text-align:center; padding: 20px; color:#94a3b8;">Nenhuma ordem finalizada</td></tr>' : ''}
+            </tbody>
+            ${finishedOrders.length > 0 ? `
+            <tfoot>
+              <tr style="background:#f8fafc; font-weight:bold;">
+                <td colspan="3" class="text-right">TOTAL FINALIZADO:</td>
+                <td class="text-right">${totalFinishedPieces}</td>
+                <td colspan="2" class="text-right text-emerald-600">R$ ${totalFinishedValue.toFixed(2)}</td>
+              </tr>
+            </tfoot>` : ''}
+          </table>
+
+          <div class="card-title">Ordens Ativas</div>
+          <table>
+            <thead>
+              <tr>
+                <th>OP</th>
+                <th>Produto</th>
+                <th>Status</th>
+                <th class="text-right">Quantidade</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${activeOrders.map(o => `
+                <tr>
+                  <td class="font-bold">#${o.code || o.id}</td>
+                  <td>${o.product_name}</td>
+                  <td>${o.status}</td>
+                  <td class="text-right font-bold">${o.quantity}</td>
+                </tr>
+              `).join('')}
+              ${activeOrders.length === 0 ? '<tr><td colspan="4" style="text-align:center; padding: 20px; color:#94a3b8;">Nenhuma ordem ativa</td></tr>' : ''}
+            </tbody>
+          </table>
+
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(() => { window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -1580,7 +1718,7 @@ function ReportsView({ company }: { company: CompanyInfo | null }) {
           </select>
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={handlePrint}
             className="w-full sm:w-auto bg-indigo-600 text-white px-4 py-2 rounded-xl flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors print:hidden shrink-0 shadow-lg shadow-indigo-100 active:scale-95"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -1588,6 +1726,7 @@ function ReportsView({ company }: { company: CompanyInfo | null }) {
           </button>
         </div>
       </div>
+
 
 
       <div className="hidden print:block mb-8 border-b-2 border-slate-200 pb-4">
